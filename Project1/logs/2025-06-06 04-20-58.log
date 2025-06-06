@@ -1,0 +1,19 @@
+[06-06-2025 04-21-00] 21 root - INFO - Data Ingestion start
+[06-06-2025 04-21-00] 24 root - INFO - read the data from stud.csv
+[06-06-2025 04-21-00] 27 root - INFO - Raw Data File Completed
+[06-06-2025 04-21-00] 28 root - INFO - Train Test Split Initiated
+[06-06-2025 04-21-00] 32 root - INFO - Train Test Split Completed
+[06-06-2025 04-21-00] 21 root - INFO - Data Ingestion start
+[06-06-2025 04-21-00] 24 root - INFO - read the data from stud.csv
+[06-06-2025 04-21-00] 27 root - INFO - Raw Data File Completed
+[06-06-2025 04-21-00] 28 root - INFO - Train Test Split Initiated
+[06-06-2025 04-21-00] 32 root - INFO - Train Test Split Completed
+[06-06-2025 04-21-00] 58 root - INFO - Data transformation initiated
+[06-06-2025 04-21-00] 38 root - INFO - Column Transformer initiated
+[06-06-2025 04-21-00] 45 root - INFO - Column Transformer Created Successfully
+[06-06-2025 04-21-00] 64 root - INFO - Train and test data read successfully
+[06-06-2025 04-21-00] 65 root - INFO - Train Dataframe shape: (800, 8)
+[06-06-2025 04-21-00] 66 root - INFO - Test Dataframe shape: (200, 8)
+[06-06-2025 04-21-00] 38 root - INFO - Column Transformer initiated
+[06-06-2025 04-21-00] 45 root - INFO - Column Transformer Created Successfully
+[06-06-2025 04-21-00] 83 root - ERROR - Error in initiate data transformation: A given column is not a column of the dataframe

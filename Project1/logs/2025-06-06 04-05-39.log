@@ -1,0 +1,16 @@
+[06-06-2025 04-05-40] 21 root - INFO - Data Ingestion start
+[06-06-2025 04-05-40] 24 root - INFO - read the data from stud.csv
+[06-06-2025 04-05-40] 27 root - INFO - Raw Data File Completed
+[06-06-2025 04-05-40] 28 root - INFO - Train Test Split Initiated
+[06-06-2025 04-05-40] 32 root - INFO - Train Test Split Completed
+[06-06-2025 04-05-40] 21 root - INFO - Data Ingestion start
+[06-06-2025 04-05-40] 24 root - INFO - read the data from stud.csv
+[06-06-2025 04-05-40] 27 root - INFO - Raw Data File Completed
+[06-06-2025 04-05-40] 28 root - INFO - Train Test Split Initiated
+[06-06-2025 04-05-40] 32 root - INFO - Train Test Split Completed
+[06-06-2025 04-05-40] 58 root - INFO - Data transformation initiated
+[06-06-2025 04-05-40] 35 root - INFO - Column Transformer initiated
+[06-06-2025 04-05-40] 42 root - INFO - Column Transformer Created Successfully
+[06-06-2025 04-05-40] 53 root - INFO - Train and test data read successfully
+[06-06-2025 04-05-40] 54 root - INFO - Train Dataframe shape: (800, 8)
+[06-06-2025 04-05-40] 55 root - INFO - Test Dataframe shape: (200, 8)

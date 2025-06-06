@@ -1,0 +1,29 @@
+[06-06-2025 05-25-13] 21 root - INFO - Data Ingestion start
+[06-06-2025 05-25-13] 24 root - INFO - read the data from stud.csv
+[06-06-2025 05-25-13] 27 root - INFO - Raw Data File Completed
+[06-06-2025 05-25-13] 28 root - INFO - Train Test Split Initiated
+[06-06-2025 05-25-13] 32 root - INFO - Train Test Split Completed
+[06-06-2025 05-25-13] 21 root - INFO - Data Ingestion start
+[06-06-2025 05-25-13] 24 root - INFO - read the data from stud.csv
+[06-06-2025 05-25-13] 27 root - INFO - Raw Data File Completed
+[06-06-2025 05-25-13] 28 root - INFO - Train Test Split Initiated
+[06-06-2025 05-25-13] 32 root - INFO - Train Test Split Completed
+[06-06-2025 05-25-13] 58 root - INFO - Data transformation initiated
+[06-06-2025 05-25-13] 40 root - INFO - Column Transformer initiated
+[06-06-2025 05-25-13] 47 root - INFO - Column Transformer Created Successfully
+[06-06-2025 05-25-13] 62 root - INFO - Train and test data read successfully
+[06-06-2025 05-25-13] 63 root - INFO - Train Dataframe shape: (800, 8)
+[06-06-2025 05-25-13] 64 root - INFO - Test Dataframe shape: (200, 8)
+[06-06-2025 05-25-13] 40 root - INFO - Column Transformer initiated
+[06-06-2025 05-25-13] 47 root - INFO - Column Transformer Created Successfully
+[06-06-2025 05-25-13] 14 root - INFO - File Saved Successfully at path: artifacts/preprocessor.pkl
+[06-06-2025 05-25-13] 27 root - INFO - Splitting X_train,y_train,X_test,y_test
+[06-06-2025 05-25-13] 29 root - INFO - Training and testing data completed
+[06-06-2025 05-25-14] 26 root - INFO - RandomForestRegressor R2 Score: 0.8542517967798111
+[06-06-2025 05-25-14] 26 root - INFO - GradientBoostingRegressor R2 Score: 0.8723313378437083
+[06-06-2025 05-25-14] 26 root - INFO - LinearRegression R2 Score: 0.8804332983749565
+[06-06-2025 05-25-14] 26 root - INFO - KNeighborsRegressor R2 Score: 0.47561174068704326
+[06-06-2025 05-25-14] 26 root - INFO - DecisionTreeRegressor R2 Score: 0.7582584581800489
+[06-06-2025 05-25-14] 26 root - INFO - XGBRegressor R2 Score: 0.8212204901494256
+[06-06-2025 05-25-15] 26 root - INFO - CatBoostRegressor R2 Score: 0.8518305378322716
+[06-06-2025 05-25-15] 26 root - INFO - AdaBoostRegressor R2 Score: 0.8488270513744298

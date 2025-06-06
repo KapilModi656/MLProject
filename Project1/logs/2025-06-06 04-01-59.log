@@ -1,0 +1,11 @@
+[06-06-2025 04-02-02] 21 root - INFO - Data Ingestion start
+[06-06-2025 04-02-02] 24 root - INFO - read the data from stud.csv
+[06-06-2025 04-02-02] 27 root - INFO - Raw Data File Completed
+[06-06-2025 04-02-02] 28 root - INFO - Train Test Split Initiated
+[06-06-2025 04-02-02] 32 root - INFO - Train Test Split Completed
+[06-06-2025 04-02-02] 21 root - INFO - Data Ingestion start
+[06-06-2025 04-02-02] 24 root - INFO - read the data from stud.csv
+[06-06-2025 04-02-02] 27 root - INFO - Raw Data File Completed
+[06-06-2025 04-02-02] 28 root - INFO - Train Test Split Initiated
+[06-06-2025 04-02-02] 32 root - INFO - Train Test Split Completed
+[06-06-2025 04-02-02] 57 root - INFO - Data transformation initiated

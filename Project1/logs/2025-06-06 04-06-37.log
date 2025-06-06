@@ -1,0 +1,17 @@
+[06-06-2025 04-06-39] 21 root - INFO - Data Ingestion start
+[06-06-2025 04-06-39] 24 root - INFO - read the data from stud.csv
+[06-06-2025 04-06-39] 27 root - INFO - Raw Data File Completed
+[06-06-2025 04-06-39] 28 root - INFO - Train Test Split Initiated
+[06-06-2025 04-06-39] 32 root - INFO - Train Test Split Completed
+[06-06-2025 04-06-39] 21 root - INFO - Data Ingestion start
+[06-06-2025 04-06-39] 24 root - INFO - read the data from stud.csv
+[06-06-2025 04-06-39] 27 root - INFO - Raw Data File Completed
+[06-06-2025 04-06-39] 28 root - INFO - Train Test Split Initiated
+[06-06-2025 04-06-39] 32 root - INFO - Train Test Split Completed
+[06-06-2025 04-06-39] 58 root - INFO - Data transformation initiated
+[06-06-2025 04-06-39] 35 root - INFO - Column Transformer initiated
+[06-06-2025 04-06-39] 42 root - INFO - Column Transformer Created Successfully
+[06-06-2025 04-06-39] 53 root - INFO - Train and test data read successfully
+[06-06-2025 04-06-39] 54 root - INFO - Train Dataframe shape: (800, 8)
+[06-06-2025 04-06-39] 55 root - INFO - Test Dataframe shape: (200, 8)
+[06-06-2025 04-06-39] 72 root - ERROR - Error in initiate data transformation: 'DataTransformationConfig' object has no attribute 'raw_data_path'

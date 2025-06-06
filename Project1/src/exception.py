@@ -1,12 +1,11 @@
-
 import sys
 
 def error_message_detail(error,error_detail:sys):
     _,_,exc_tb=error_detail.exc_info()
     file_name=exc_tb.tb_frame.f_code.co_filename
-    error_message=f"error occurred in scrip [{0}] at lineno [{1}] with message:\n [{2}]"
-    format(file_name,exc_tb.tb_lineno,str(error))
-    return error_message
+    return "error occurred in script [{0}] at lineno [{1}] with message: [{2}]".format(
+        file_name, exc_tb.tb_lineno, str(error)
+    )
 
 
 class CustomException(Exception):
