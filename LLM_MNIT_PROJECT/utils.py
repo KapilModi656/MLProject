@@ -3,7 +3,9 @@ from langchain_text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import YoutubeLoader
 from langchain_tavily import TavilySearchAPIWrapper
 from validators import url as is_valid_url
-from langchain_core.utils
+from langchain_community.tools import WikipediaQueryRun,ArxivQueryRun,JinaSearch
+from langchain_community.utilities import WikipediaAPIWrapper, ArxivAPIWrapper
+
 def has_url(prompt):
     url_pattern = r'https?://\S+'
     return bool(re.search(url_pattern, prompt))
@@ -11,9 +13,21 @@ def find_urls(prompt):
     url_pattern = r'https?://\S+'
     return re.findall(url_pattern, prompt)
 def is_file(user_input):
-    return bool(user_input.files) if user_input else False
+    return hasattr(user_input, "files") and user_input.files
+import tempfile
+
+def save_uploaded_file(file):
+    # Get a temporary file path in the system's temp directory
+    temp_dir = tempfile.gettempdir()
+    file_path = os.path.join(temp_dir, file.name)
+
+    # Save the file content
+    with open(file_path, "wb") as f:
+        f.write(file.read())
+
+    return file_path
 def docreader(file_path):
-    if file_path.endswith('.pdf'|| '.txt' || '.docx'||"pptx"):
+    if file_path.endswith(('.pdf', '.txt', '.docx', '.pptx')):
         loader = UnstructuredLoader(file_path)
         docs=loader.load()
         docs= RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200).split_documents(docs)
@@ -50,8 +64,32 @@ def youtube_reader(url):
     docs = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200).split_documents(docs)
     return docs
 def web_reader(url):
-    search = TavilyWebSearchAPIWrapper()
-    docs = search.run(url)
+    loader = UnstructuredLoader(web_url=url)
+    docs = loader.load()
     docs = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200).split_documents(docs)
     return docs
 
+def wikipedia_tool(prompt):
+    if not prompt:
+        raise ValueError("Prompt cannot be empty.")
+    wiki_wrapper = WikipediaAPIWrapper()
+    
+    wiki_tool = WikipediaQueryRun(wiki_wrapper)
+    response= wiki_tool.run(prompt)
+    return response
+
+def arxiv_tool(prompt):
+    if not prompt:
+        raise ValueError("Prompt cannot be empty.")
+    arxiv_wrapper = ArxivAPIWrapper()
+    
+    arxiv_tool = ArxivQueryRun(arxiv_wrapper)
+    response= arxiv_tool.run(prompt)
+    return response
+def web_tool(prompt):
+    if not prompt:
+        raise ValueError("Prompt cannot be empty.")
+    jina_search = JinaSearch()
+    
+    response = jina_search.run(prompt)
+    return response

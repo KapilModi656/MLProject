@@ -9,3 +9,11 @@ langchain_tools
 langchain-unstructured
 langchain_text_splitters
 langchain-tavily
+langchain-huggingface
+sentence-transformers
+transformers
+langchain-milvus
+pymilvus
+langchain-groq
+groq
+langchain_mistralai
