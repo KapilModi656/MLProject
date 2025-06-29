@@ -7,6 +7,7 @@ from langchain_community.tools import WikipediaQueryRun,ArxivQueryRun,JinaSearch
 from langchain_community.utilities import WikipediaAPIWrapper, ArxivAPIWrapper
 import os
 from dotenv import load_dotenv
+import json
 load_dotenv()
 def has_url(prompt):
     url_pattern = r'https?://\S+'
@@ -44,12 +45,26 @@ def docreader(file_path):
 def doc_prompt_merger(prompt, doc):
     if not doc:
         return prompt
+
+    # If single Document object
+    if hasattr(doc, "page_content"):
+        return f"{prompt}\n\nDocument:\n{doc.page_content}"
+
+    # If list of Document objects
+    if isinstance(doc, list):
+        # If items are Document objects, extract page_content, else treat as strings
+        if len(doc) > 0 and hasattr(doc[0], "page_content"):
+            content = "\n".join(d.page_content for d in doc)
+        else:
+            content = "\n".join(str(d) for d in doc)
+        return f"{prompt}\n\nDocuments:\n{content}"
+
+    # If it's a raw string
     if isinstance(doc, str):
         return f"{prompt}\n\nDocument:\n{doc}"
-    elif isinstance(doc, list):
-        return f"{prompt}\n\nDocuments:\n" + "\n".join(doc)
-    else:
-        raise ValueError("Document must be a string or a list of strings.")
+
+    raise ValueError("Document must be a string or a list of Document objects or strings.")
+
 def type_url(urls):
     urlty={"youtube": [], "arxiv": [], "web": []}
     for url in urls:
@@ -96,5 +111,7 @@ def web_tool(prompt):
         raise ValueError("Prompt cannot be empty.")
     jina_search = JinaSearch(api_key=os.getenv("JINA_API_KEY"))
     
-    response = jina_search.run(prompt)
-    return response
+    response = jina_search.invoke({"query": prompt})
+    response=json.loads(response)
+    final_response=response[0].get("link","")
+    return final_response

@@ -35,7 +35,7 @@ def get_retriever() -> VectorStoreRetriever:
             "k": 5,
             "filter": None,
             "search_type": "hybrid",
-            "score_threshold": 0.5,
+            "score_threshold": 0.3,
         }
     )
 

@@ -39,16 +39,12 @@ class State(TypedDict):
     isfile: bool
     has_urls: bool
 
-def remove_user_input(state: State):
-    # Helper: copy state and remove user_input key to avoid concurrent updates error
-    branch_state = state.copy()
-    branch_state.pop("user_input", None)
-    return branch_state
+
 
 def check_for_file_node(state: State):
     state["isfile"] = is_file(state["user_input"])
-    branch_state = remove_user_input(state)
-    return {"True": branch_state} if state["isfile"] else {"False": branch_state}
+    print("check_for_file_node:working fine")
+    return state
 
 def FileConverter(state: State):
     state.setdefault("docs", [])
@@ -56,64 +52,65 @@ def FileConverter(state: State):
     for file in files:
         path = save_uploaded_file(file)
         state["docs"] += docreader(path)
+    print("FileConverter:working fine")
     return state
 
 def prompt_doc_merger_node(state: State):
-    text = state["user_input"].get("text", "") if isinstance(state["user_input"], dict) else state["user_input"]
+    text = state["user_input"].get("text", "")
     state["merged_prompt"] = doc_prompt_merger(text, state.get("docs", [])) if state.get("docs") else text
+    print("prompt_doc_merger_node:working fine")
     return state
 
 def check_for_urls_node(state: State):
-    text = state["user_input"].get("text", "") if isinstance(state["user_input"], dict) else state["user_input"]
+    text = state["user_input"].get("text", "")
     urls = find_urls(text)
     state.setdefault("urls", []).extend(urls)
     state["has_urls"] = bool(urls)
-    branch_state = remove_user_input(state)
-    return {"has_urls": branch_state} if urls else {"no_urls": branch_state}
+    print("check_for_urls_node:working fine")
+    return state
 
 def url_type_node(state: State):
     state["url_types"] = type_url(state.get("urls", []))
-    branch_state = remove_user_input(state)
-    if state["url_types"].get("youtube"):
-        return {"youtube": branch_state}
-    elif state["url_types"].get("arxiv"):
-        return {"arxiv": branch_state}
-    return {"web": branch_state}
+    print("url_type_node:working fine")
+    
+    return state
 
 def youtube_reader_node(state: State):
     state["youtube_docs"] = sum([youtube_reader(url) for url in state["url_types"].get("youtube", [])], [])
-    branch_state = remove_user_input(state)
-    return {"has_youtube_docs": branch_state} if state["youtube_docs"] else {"no_youtube_docs": branch_state}
+    print("youtube_reader_node:working fine")
+    return state
 
 def web_reader_node(state: State):
+    print("web_reader_node:working fine")
     state["web_docs"] = sum([web_reader(url) for url in state["url_types"].get("web", [])], [])
-    branch_state = remove_user_input(state)
-    return {"has_web_docs": branch_state} if state["web_docs"] else {"no_web_docs": branch_state}
+    return state
 
 def arxiv_reader_node(state: State):
+    print("arxiv_reader_node:working fine")
     text = state["user_input"].get("text", "") if isinstance(state["user_input"], dict) else state["user_input"]
     state["arxiv_docs"] = arxiv_tool(text)
-    branch_state = remove_user_input(state)
-    return {"has_arxiv_docs": branch_state} if state["arxiv_docs"] else {"no_arxiv_docs": branch_state}
+    return state
 
 def wikipedia_reader_node(state: State):
+    print("wikipedia_reader_node:working fine")
     text = state["user_input"].get("text", "") if isinstance(state["user_input"], dict) else state["user_input"]
     state["wiki_response"] = wikipedia_tool(text)
-    branch_state = remove_user_input(state)
-    return {"has_wiki_response": branch_state} if state["wiki_response"] else {"no_wiki_response": branch_state}
+    return state
 
 def web_reader_tool_node(state: State):
+    print("web_reader_tool:working fine")
     text = state["user_input"].get("text", "") if isinstance(state["user_input"], dict) else state["user_input"]
     state["web_response"] = web_tool(text)
-    branch_state = remove_user_input(state)
-    return {"has_web_response": branch_state} if state["web_response"] else {"no_web_response": branch_state}
+    return state
 
 def final_prompt_node(state: State):
+    print("final_prompt_node:working fine")
     docs_lists = [
         state.get("docs") or [],
         state.get("arxiv_docs") or [],
         state.get("youtube_docs") or [],
-        state.get("web_docs") or []
+        state.get("web_docs") or [],
+        state.get("vectordb_docs") or [],
     ]
     combined_docs = []
     for doc_list in docs_lists:
@@ -134,30 +131,23 @@ def final_prompt_node(state: State):
     print(f"[final_prompt_node] docs: {len(combined_docs)}, wiki_response: {bool(state.get('wiki_response'))}, web_response: {bool(state.get('web_response'))}, context: {bool(state.get('context'))}")
     print(f"[final_prompt_node] final_prompt set? {state['final_prompt'][:50]}")
 
-    branch_state = remove_user_input(state)
-    if context:
-        return {"has_docs": branch_state}
-    else:
-        return {"no_docs": branch_state}
-
-def ensure_prompt_node(state: State):
-    if not state.get("merged_prompt") and not state.get("final_prompt"):
-        text = state["user_input"].get("text", "") if isinstance(state["user_input"], dict) else state["user_input"]
-        state["final_prompt"] = f"User Input: {text}"
-        print("[ensure_prompt_node] final_prompt forcibly set.")
     return state
+
+
 
 def vectordb_node(state: State):
     retriever = get_retriever()
     text = state["user_input"].get("text", "") if isinstance(state["user_input"], dict) else state["user_input"]
     state["context"] = retriever.invoke(text)
-    branch_state = remove_user_input(state)
-    return {"has_context": branch_state} if state["context"] else {"no_context": branch_state}
+    print(f"[vectordb_node] context set? {bool(state['context'])}")
+    return {"has_context": state} if state["context"] else {"no_context": state}
 
 def llm1_node(state: State):
     prompt = state.get("merged_prompt") or state.get("final_prompt")
     if prompt is None:
         raise ValueError("Neither 'merged_prompt' nor 'final_prompt' is set in the state before calling llm1_node.")
+    
+    print(f"[llm1_node] Using prompt: {prompt[:50]}...")  # Log first 50 chars of prompt
     state["response"] = llm1.invoke(prompt)
     return state
 
@@ -165,6 +155,7 @@ def llm2_node(state: State):
     prompt = state.get("merged_prompt") or state.get("final_prompt")
     if prompt is None:
         raise ValueError("Neither 'merged_prompt' nor 'final_prompt' is set in the state before calling llm2_node.")
+    print(f"[llm2_node] Using prompt: {prompt[:50]}...")  # Log first 50 chars of prompt
     state["response"] = llm2.invoke(prompt)
     return state
 
@@ -172,6 +163,7 @@ def llm3_node(state: State):
     prompt = state.get("merged_prompt") or state.get("final_prompt")
     if prompt is None:
         raise ValueError("Neither 'merged_prompt' nor 'final_prompt' is set in the state before calling llm3_node.")
+    print(f"[llm3_node] Using prompt: {prompt[:50]}...")  # Log first 50 chars of prompt
     state["response"] = llm3.invoke(prompt)
     return state
 
@@ -196,10 +188,11 @@ Prompt: {input}
 """)
 
 def data_routing_node(state: State):
-    text = state["user_input"].get("text", "") if isinstance(state["user_input"], dict) else state["user_input"]
+    text = state["user_input"].get("text", "")
     result = router_llm.invoke(data_routing_prompt.invoke({"input": text}))
     data_choice = result.content.strip().lower() if hasattr(result, "content") else str(result).lower()
-    
+    print(f"[data_routing_node] Selected context: {data_choice}")
+
     # Fallback to vectordb if unexpected
     if data_choice not in ["vectordb", "websearch", "arxiv"]:
         data_choice = "vectordb"
@@ -209,19 +202,18 @@ def data_routing_node(state: State):
     # Optionally remove user_input if needed to avoid update errors
     # state = remove_user_input(state)  # if defined
     
-    return {data_choice: state}
+    return state
 
 
 def routing_node(state: State):
     text = state["user_input"].get("text", "") if isinstance(state["user_input"], dict) else state["user_input"]
-    state["llm_choice"] = router_llm.invoke(routing_prompt.invoke({"input": text})).content.strip().lower()
-    branch_state = remove_user_input(state)
-    return branch_state
+    result=router_llm.invoke(routing_prompt.invoke({"input": text})).content.strip().lower()
+    if "llm_choice" not in state or state["llm_choice"] is not result:
+        # Only set llm_choice if it doesn't already exist or is None
+        state["llm_choice"] = result
+    print(f"[routing_node] Selected LLM: {state['llm_choice']}")
+    return state
 
-def llm_choice_node(state: State):
-    llm = state.get("llm_choice", "cerebras")  # default to cerebras
-    branch_state = remove_user_input(state)
-    return {llm: branch_state} if llm in ["groq", "cerebras", "mistral"] else {"cerebras": branch_state}
 
 def create_workflow():
     graph = StateGraph(State)
@@ -240,21 +232,21 @@ def create_workflow():
     graph.add_node("vectordb_node", vectordb_node)
     graph.add_node("final_prompt_node", final_prompt_node)
     graph.add_node("routing_node", routing_node)
-    graph.add_node("llm_choice_node", llm_choice_node)
+   
     graph.add_node("llm1_node", llm1_node)
     graph.add_node("llm2_node", llm2_node)
     graph.add_node("llm3_node", llm3_node)
-    graph.add_node("ensure_prompt_node", ensure_prompt_node)
+    
 
     graph.add_edge(START, "check_for_file_node")
-    graph.add_edge("routing_node", "llm_choice_node")
-    graph.add_edge("prompt_doc_merger_node", "ensure_prompt_node")
-    graph.add_edge("final_prompt_node", "ensure_prompt_node")
-    graph.add_edge("ensure_prompt_node", "routing_node")
+   
+    graph.add_edge("prompt_doc_merger_node", "routing_node")
+    graph.add_edge("final_prompt_node", "routing_node")
+    
 
     # LLM selection
     graph.add_conditional_edges(
-        "llm_choice_node",
+        "routing_node",
         lambda state: state["llm_choice"],
         path_map={
             "groq": "llm2_node",
