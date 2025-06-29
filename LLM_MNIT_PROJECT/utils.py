@@ -22,6 +22,10 @@ def is_file(user_input):
     else:
         return hasattr(user_input, "files") and bool(user_input.files)
 import tempfile
+PROXIES = {
+    "http": os.getenv("HTTP_PROXY", "http://your-proxy:port"),
+    "https": os.getenv("HTTPS_PROXY", "http://your-proxy:port")
+}
 
 def save_uploaded_file(file):
     # Get a temporary file path in the system's temp directory
@@ -78,12 +82,29 @@ def type_url(urls):
         else:
             urlty["web"].append(url)
     return urlty
-def youtube_reader(url):
-    
-    loader = YoutubeLoader.from_youtube_url(url,language=["en", "en-IN", "hi"])
-    docs = loader.load()
-    docs = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200).split_documents(docs)
-    return docs
+def youtube_reader(url: str):
+    try:
+        # Extract video ID from URL
+        video_id = url.split("v=")[-1].split("&")[0]
+
+        # Override internal proxy config (hacky but works)
+        from youtube_transcript_api._api import _TranscriptApi
+        _TranscriptApi._TranscriptApi__proxy_config = PROXIES  # override private proxy config
+
+        # Test API call (optional but safe)
+        _ = YouTubeTranscriptApi.list_transcripts(video_id)
+
+        # Now use LangChain loader
+        loader = YoutubeLoader.from_youtube_url(url, language=["en", "en-IN", "hi"])
+        docs = loader.load()
+
+        splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
+        return splitter.split_documents(docs)
+
+    except (VideoUnavailable, TranscriptsDisabled, NoTranscriptFound) as e:
+        return [f"Transcript error for {url}: {str(e)}"]
+    except Exception as e:
+        return [f"Proxy/Network error for {url}: {str(e)}"]
 def web_reader(url):
     from langchain_community.document_loaders import UnstructuredURLLoader
     loader = UnstructuredURLLoader(urls=[url])

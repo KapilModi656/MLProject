@@ -119,7 +119,10 @@ def final_prompt_node(state: State):
 
     context_parts = []
     if combined_docs:
-        context_parts.append("\n".join(combined_docs))
+        context_parts.append("\n".join(
+            doc.page_content if hasattr(doc, "page_content") else str(doc)
+            for doc in combined_docs
+        ))
     for key in ["wiki_response", "web_response", "context"]:
         val = state.get(key)
         if val:
