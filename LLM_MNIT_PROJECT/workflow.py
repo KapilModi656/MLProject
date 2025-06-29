@@ -13,6 +13,7 @@ from langchain_core.prompts import PromptTemplate
 from langchain_core.runnables import RunnableLambda, RunnableSequence
 from vector import get_retriever
 from IPython.display import Image, display
+import re
 load_dotenv()
 
 # Initialize LLMs
@@ -207,10 +208,12 @@ def data_routing_node(state: State):
 
 def routing_node(state: State):
     text = state["user_input"].get("text", "") if isinstance(state["user_input"], dict) else state["user_input"]
-    result=router_llm.invoke(routing_prompt.invoke({"input": text})).content.strip().lower()
-    if "llm_choice" not in state or state["llm_choice"] is not result:
-        # Only set llm_choice if it doesn't already exist or is None
-        state["llm_choice"] = result
+    result = router_llm.invoke(routing_prompt.invoke({"input": text})).content.strip().lower()
+    # Remove punctuation and whitespace
+    result = re.sub(r'[^a-z]', '', result)
+    if result not in {"groq", "cerebras", "mistral"}:
+        raise ValueError(f"Unknown llm_choice: {result}")
+    state["llm_choice"] = result
     print(f"[routing_node] Selected LLM: {state['llm_choice']}")
     return state
 

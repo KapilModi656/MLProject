@@ -33,18 +33,16 @@ if prompt:
         
 
         
-        
+        state = {"user_input": user_input}
         
         graph = create_workflow()
         # Initial state to send to LangGraph
-        state = {"user_input": user_input}
+        
 
         # Call the LangGraph
-        
         result = graph.invoke(state)
         response_text = result.get("response") if isinstance(result, dict) else None
         # Display result
-        
         with st.chat_message("assistant"):
             st.write(response_text.content)
 

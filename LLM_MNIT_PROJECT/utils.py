@@ -1,10 +1,11 @@
 from langchain_community.document_loaders import UnstructuredFileLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_community.document_loaders import YoutubeLoader
+from langchain_community.document_loaders.youtube import YoutubeLoader
 import re
 from validators import url as is_valid_url
 from langchain_community.tools import WikipediaQueryRun,ArxivQueryRun,JinaSearch
 from langchain_community.utilities import WikipediaAPIWrapper, ArxivAPIWrapper
+from youtube_transcript_api import YouTubeTranscriptApi, TranscriptsDisabled, NoTranscriptFound, VideoUnavailable
 import os
 from dotenv import load_dotenv
 import json
@@ -79,12 +80,13 @@ def type_url(urls):
     return urlty
 def youtube_reader(url):
     
-    loader = YoutubeLoader.from_youtube_url(url)
+    loader = YoutubeLoader.from_youtube_url(url,language=["en", "en-IN", "hi"])
     docs = loader.load()
     docs = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200).split_documents(docs)
     return docs
 def web_reader(url):
-    loader = UnstructuredLoader(web_url=url)
+    from langchain_community.document_loaders import UnstructuredURLLoader
+    loader = UnstructuredURLLoader(urls=[url])
     docs = loader.load()
     docs = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200).split_documents(docs)
     return docs
