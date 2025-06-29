@@ -17,3 +17,9 @@ pymilvus
 langchain-groq
 groq
 langchain_mistralai
+unstructured
+unstructured[pptx]
+unstructured[pdf]
+validators
+streamlit
+streamlit-chat

@@ -1,11 +1,13 @@
-from langchain-unstructured import UnstructuredLoader
-from langchain_text_splitter import RecursiveCharacterTextSplitter
+from langchain_community.document_loaders import UnstructuredFileLoader
+from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import YoutubeLoader
-from langchain_tavily import TavilySearchAPIWrapper
+import re
 from validators import url as is_valid_url
 from langchain_community.tools import WikipediaQueryRun,ArxivQueryRun,JinaSearch
 from langchain_community.utilities import WikipediaAPIWrapper, ArxivAPIWrapper
-
+import os
+from dotenv import load_dotenv
+load_dotenv()
 def has_url(prompt):
     url_pattern = r'https?://\S+'
     return bool(re.search(url_pattern, prompt))
@@ -13,7 +15,10 @@ def find_urls(prompt):
     url_pattern = r'https?://\S+'
     return re.findall(url_pattern, prompt)
 def is_file(user_input):
-    return hasattr(user_input, "files") and user_input.files
+    if isinstance(user_input, dict):
+        return bool(user_input.get("files"))
+    else:
+        return hasattr(user_input, "files") and bool(user_input.files)
 import tempfile
 
 def save_uploaded_file(file):
@@ -28,7 +33,7 @@ def save_uploaded_file(file):
     return file_path
 def docreader(file_path):
     if file_path.endswith(('.pdf', '.txt', '.docx', '.pptx')):
-        loader = UnstructuredLoader(file_path)
+        loader = UnstructuredFileLoader(file_path)
         docs=loader.load()
         docs= RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200).split_documents(docs)
     else:
@@ -89,7 +94,7 @@ def arxiv_tool(prompt):
 def web_tool(prompt):
     if not prompt:
         raise ValueError("Prompt cannot be empty.")
-    jina_search = JinaSearch()
+    jina_search = JinaSearch(api_key=os.getenv("JINA_API_KEY"))
     
     response = jina_search.run(prompt)
     return response
