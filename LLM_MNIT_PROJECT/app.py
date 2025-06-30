@@ -118,5 +118,4 @@ if prompt:
         st.session_state["messages"].append({"role": "assistant", "content": assistant_msg})
         with st.chat_message("assistant"):
             st.markdown(fix_latex_format(assistant_msg), unsafe_allow_html=True)
-            with st.expander("📋 Copy", expanded=False):
-                st.code(assistant_msg, language="markdown")
+            
