@@ -240,15 +240,15 @@ router_llm = ChatCerebras(model="llama-4-scout-17b-16e-instruct", api_key=os.get
 syllabus_prompt= PromptTemplate.from_template("""
 You are an intelligent router. Based on the user prompt, choose the most appropriate context:
 - "syllabus" for syllabus-related queries or academic queries
-- "None" for other queries if its tutorial or pyq 
-Just reply with one word.[syllabus, None].
+- "none" for other queries if its tutorial or pyq
+Just reply with one word.[syllabus, none].
 Prompt: {input}
 """)
 tutorial_pyq_prompt= PromptTemplate.from_template("""
 You are an intelligent router. Based on the user prompt, choose the most appropriate context:
 - "tutorial" for tutorials-related queries
 - "pyq" for previous year questions related queries
-- "None" for other queries
+- "none" for other queries
 Just reply with one word.[tutorial, pyq, None].
 Prompt: {input}
 """)
@@ -394,11 +394,10 @@ def create_workflow():
     )
     graph.add_conditional_edges(
         "syllabus_node",
-        lambda state: state.get("syllabus_choice","None"),
+        lambda state: state.get("syllabus_choice","none"),
         path_map={
             "syllabus": "mnit_syllabus",
-            "None": "tutorials_pyq_node",
-            "none": "tutorials_pyq_node"  # Default to tutorials/pyq if not specified
+            "none": "tutorials_pyq_node"
         }
     )
     graph.add_edge("mnit_syllabus", "tutorials_pyq_node")
@@ -408,7 +407,7 @@ def create_workflow():
         path_map={
             "tutorial": "tutorials",
             "pyq": "pyq",
-            "None": "data_routing_node"
+            "none": "data_routing_node"
         }
     )
     graph.add_edge("tutorials", "data_routing_node")
