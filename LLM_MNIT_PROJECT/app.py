@@ -182,7 +182,7 @@ if prompt:
                 st.markdown(
                     f"""
                     <div style='background: linear-gradient(90deg, var(--assistant-bubble-bg, #23272f) 80%, #31363f 100%); color: var(--assistant-bubble-fg, #fff); padding: 12px 18px; border-radius: 18px 18px 18px 4px; max-width: 100%; word-break: break-word; text-align: left; box-shadow: 0 2px 8px rgba(0,0,0,0.10); font-size: 1.08em;'>
-                        {fix_latex_format(assistant_msg)}
+                        {assistant_msg}
                     </div>
                     """,
                     unsafe_allow_html=True
