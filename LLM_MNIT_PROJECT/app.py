@@ -41,6 +41,7 @@ def fix_latex_format(text: str) -> str:
         return f"\n```latex\n{match.group(1)}\n```\n"
     text = re.sub(r"\(([^()]*\\begin\{bmatrix\}.*?\\end\{bmatrix\}[^()]*)\)", matrix_block, text, flags=re.DOTALL)
 
+
     # Escape standalone [ and ]
     text = text.replace('[', '\\[').replace(']', '\\]')
 
