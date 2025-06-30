@@ -153,7 +153,7 @@ def final_prompt_node(state: State):
 3. Always format your output for Markdown compatibility. Use:
    - Bullet points, headers, and bold for structure.
    - LaTeX properly wrapped in `$$...$$` for display equations, and `$...$` for inline math.
-   - Matrices in LaTeX using `\\begin{bmatrix} ... \\end{bmatrix}` and wrap them in `$$...$$`.
+   - Matrices in LaTeX using `\\begin{{bmatrix}} ... \\end{{bmatrix}}` and wrap them in `$$...$$`.
    - Integrals, derivatives, and summations using display-style LaTeX blocks (also in `$$...$$`).
    - Ensure all expressions render cleanly in Streamlit or Markdown viewers.
 
