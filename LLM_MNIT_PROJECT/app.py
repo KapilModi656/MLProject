@@ -15,6 +15,16 @@ def fix_latex_format(text: str) -> str:
         text = str(text)
     # Remove <think> tags
     text = clean_custom_tags(text)
+    # Escape square brackets outside LaTeX blocks to avoid HTML rendering issues
+    def escape_brackets(match):
+        content = match.group(0)
+        # If it's a LaTeX block, don't escape
+        if content.startswith("\\[") or content.startswith("\\begin"):
+            return content
+        # Otherwise, escape [ and ]
+        return content.replace('[', '\\[').replace(']', '\\]')
+    # Only escape brackets not in LaTeX environments
+    text = re.sub(r'\[.*?\]', escape_brackets, text)
     # Optionally wrap LaTeX in $$
     if "\\" in text and not text.strip().startswith("$$"):
         text = f"$$\n{text.strip()}\n$$"
