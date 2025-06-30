@@ -46,6 +46,9 @@ class State(TypedDict):
     tut_pyq: str
     tutorial: list[str]
     pyqs: list[str]
+    retriever_syllabus:RunnableLambda
+    retriever_tutorial:RunnableLambda
+    retriever_pyq:RunnableLambda
 
 
 syllabus_path=os.getcwd() + "/LLM_MNIT_PROJECT/1stSem/syllabus"
@@ -180,7 +183,7 @@ def mnit_syllabus(state: State):
     It can be extended to handle syllabus-specific logic.
     """
     # Example: Just echo the syllabus back
-    retriever = make_retreiver(syllabus_path)
+    retriever = state.get("retriever_syllabus")
     state["syllabus"] = retriever.invoke(state.get("user_input", {}).get("text", ""))
     return state
 def tutorials(state: State):
@@ -189,7 +192,7 @@ def tutorials(state: State):
     It can be extended to handle tutorial-specific logic.
     """
     # Example: Just echo the tutorials back
-    retriever = make_retreiver(tutorial_path)
+    retriever = state.get("retriever_tutorial")
     state["tutorial"] = retriever.invoke(state.get("user_input", {}).get("text", ""))
     return state
 def pyq(state: State):
@@ -198,7 +201,7 @@ def pyq(state: State):
     It can be extended to handle PYQ-specific logic.
     """
     # Example: Just echo the PYQ back
-    retriever = make_retreiver(pyq_path)
+    retriever = state.get("retriever_pyq")
     state["pyqs"] = retriever.invoke(state.get("user_input", {}).get("text", ""))
     return state
 def vectordb_node(state: State):

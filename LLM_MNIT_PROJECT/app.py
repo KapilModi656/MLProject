@@ -2,9 +2,16 @@ import streamlit as st
 from workflow import create_workflow
 import re
 import uuid
-
+from utils import make_retreiver
+import os
 graph = create_workflow()
 
+syllabus_path=os.getcwd() + "/LLM_MNIT_PROJECT/1stSem/syllabus"
+tutorial_path= os.getcwd() + "/LLM_MNIT_PROJECT/1stSem/tutorials"
+pyq_path= os.getcwd() + "/LLM_MNIT_PROJECT/1stSem/pyq"
+retreiver_syllabus= make_retreiver(syllabus_path)
+retreiver_tutorial= make_retreiver(tutorial_path)
+retreiver_pyq= make_retreiver(pyq_path)
 # ----------------------------
 # Utilities
 # ----------------------------
@@ -156,7 +163,10 @@ if prompt:
     with st.spinner("🧠 Thinking..."):
         result = graph.invoke({
             "user_input": user_input,
-            "groq_api_key": st.session_state["groq_api_key"]
+            "groq_api_key": st.session_state["groq_api_key"],
+            "retriever_syllabus": retreiver_syllabus,
+            "retriever_tutorial": retreiver_tutorial,
+            "retriever_pyq": retreiver_pyq
         })
         response_text = result.get("response") if isinstance(result, dict) else None
 
