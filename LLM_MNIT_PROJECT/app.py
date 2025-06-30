@@ -91,7 +91,7 @@ for msg in st.session_state["messages"]:
             with cols[1]:
                 st.write(
                     f"""
-                    <div style='background-color: var(--user-bubble-bg, #2e7d32); color: var(--user-bubble-fg, #fff); padding: 10px 15px; border-radius: 12px; max-width: 100%; word-break: break-word; text-align: right;'>
+                    <div style='background: linear-gradient(90deg, var(--user-bubble-bg, #388e3c) 80%, #43a047 100%); color: var(--user-bubble-fg, #fff); padding: 12px 18px; border-radius: 18px 18px 4px 18px; max-width: 100%; word-break: break-word; text-align: right; box-shadow: 0 2px 8px rgba(34,139,34,0.08); font-size: 1.08em;'>
                         {content}
                     </div>
                     """,
@@ -102,26 +102,38 @@ for msg in st.session_state["messages"]:
             with cols[0]:
                 st.write(
                     f"""
-                    <div style='background-color: var(--assistant-bubble-bg, #424242); color: var(--assistant-bubble-fg, #fff); padding: 10px 15px; border-radius: 12px; max-width: 100%; word-break: break-word; text-align: left;'>
+                    <div style='background: linear-gradient(90deg, var(--assistant-bubble-bg, #23272f) 80%, #31363f 100%); color: var(--assistant-bubble-fg, #fff); padding: 12px 18px; border-radius: 18px 18px 18px 4px; max-width: 100%; word-break: break-word; text-align: left; box-shadow: 0 2px 8px rgba(0,0,0,0.10); font-size: 1.08em;'>
                         {content}
                     </div>
                     """,
                     unsafe_allow_html=True
                 )
-# Inject CSS for dark/light mode compatibility
+# Improved CSS for dark/light mode compatibility and bubble style
 st.markdown('''
     <style>
     html[data-theme="dark"] {
-        --user-bubble-bg: #2e7d32;
+        --user-bubble-bg: #388e3c;
         --user-bubble-fg: #fff;
-        --assistant-bubble-bg: #424242;
+        --assistant-bubble-bg: #23272f;
         --assistant-bubble-fg: #fff;
+        background-color: #18191a;
     }
     html[data-theme="light"] {
         --user-bubble-bg: #DCF8C6;
         --user-bubble-fg: #222;
         --assistant-bubble-bg: #F1F0F0;
         --assistant-bubble-fg: #222;
+        background-color: #fff;
+    }
+    /* Make chat area a bit more modern */
+    .block-container {
+        padding-top: 2.5rem;
+        padding-bottom: 2.5rem;
+    }
+    /* Hide Streamlit's default chat message background */
+    [data-testid="stChatMessage"] {
+        background: none !important;
+        box-shadow: none !important;
     }
     </style>
 ''', unsafe_allow_html=True)
@@ -144,7 +156,7 @@ if prompt:
         with cols[1]:
             st.write(
                 f"""
-                <div style='background-color: var(--user-bubble-bg, #2e7d32); color: var(--user-bubble-fg, #fff); padding: 10px 15px; border-radius: 12px; max-width: 100%; word-break: break-word; text-align: right;'>
+                <div style='background: linear-gradient(90deg, var(--user-bubble-bg, #388e3c) 80%, #43a047 100%); color: var(--user-bubble-fg, #fff); padding: 12px 18px; border-radius: 18px 18px 4px 18px; max-width: 100%; word-break: break-word; text-align: right; box-shadow: 0 2px 8px rgba(34,139,34,0.08); font-size: 1.08em;'>
                     {fix_latex_format(user_text)}
                 </div>
                 """,
@@ -167,7 +179,7 @@ if prompt:
             with cols[0]:
                 st.write(
                     f"""
-                    <div style='background-color: var(--assistant-bubble-bg, #424242); color: var(--assistant-bubble-fg, #fff); padding: 10px 15px; border-radius: 12px; max-width: 100%; word-break: break-word; text-align: left;'>
+                    <div style='background: linear-gradient(90deg, var(--assistant-bubble-bg, #23272f) 80%, #31363f 100%); color: var(--assistant-bubble-fg, #fff); padding: 12px 18px; border-radius: 18px 18px 18px 4px; max-width: 100%; word-break: break-word; text-align: left; box-shadow: 0 2px 8px rgba(0,0,0,0.10); font-size: 1.08em;'>
                         {fix_latex_format(assistant_msg)}
                     </div>
                     """,
