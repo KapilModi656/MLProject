@@ -154,7 +154,7 @@ def final_prompt_node(state: State):
 7.proper LaTeX syntax for matrices:
 
     Use \ begin{"bmatrix"} ... \end{"bmatrix"}
-    Separate rows with \\
+    Separate rows with \ \
     Separate columns with &
     Wrap the whole thing in $$ ... $$ for display math
 8. length of your output should range between 100 to 500 words, depending on the complexity of the topic.and if math then you can take upto 900 words but not more than that

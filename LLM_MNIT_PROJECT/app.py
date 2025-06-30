@@ -5,7 +5,7 @@ graph = create_workflow()
 # ----------------------------
 # Latex Fixer
 # ----------------------------
-def fix_matrix_latex(text: str) -> str:
+def fix_latex_format(text: str) -> str:
     # Replace [bmatrix] with {bmatrix}
     text = text.replace(r'\begin[bmatrix]', r'\begin{bmatrix}')
     text = text.replace(r'\end[bmatrix]', r'\end{bmatrix}')
