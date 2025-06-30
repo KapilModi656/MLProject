@@ -86,25 +86,23 @@ for msg in st.session_state["messages"]:
     with st.chat_message(msg["role"]):
         content = fix_latex_format(msg["content"])
         if msg["role"] == "user":
-            # Right-aligned user message
-            st.markdown(
-                f"""
-                <div style='text-align: right; background-color: #DCF8C6; padding: 10px 15px; border-radius: 12px; display: inline-block; max-width: 85%; margin-left: auto;'>
-                    {content}
-                </div>
-                """,
-                unsafe_allow_html=True
+            st.write(  # right-aligned using st.write and a blank column for spacing
+                '',
+                unsafe_allow_html=False
             )
+            cols = st.columns([0.15, 0.85])
+            with cols[1]:
+                st.write(
+                    f"<div style='background-color: #DCF8C6; color: #222; padding: 10px 15px; border-radius: 12px; max-width: 100%; word-break: break-word; text-align: right;'>{content}</div>",
+                    unsafe_allow_html=True
+                )
         else:
-            # Left-aligned assistant message
-            st.markdown(
-                f"""
-                <div style='text-align: left; background-color: #F1F0F0; padding: 10px 15px; border-radius: 12px; display: inline-block; max-width: 85%;'>
-                    {content}
-                </div>
-                """,
-                unsafe_allow_html=True
-            )
+            cols = st.columns([0.85, 0.15])
+            with cols[0]:
+                st.write(
+                    f"<div style='background-color: #F1F0F0; color: #222; padding: 10px 15px; border-radius: 12px; max-width: 100%; word-break: break-word; text-align: left;'>{content}</div>",
+                    unsafe_allow_html=True
+                )
 
 # ----------------------------
 # Chat Input
@@ -119,7 +117,13 @@ if prompt:
     # Show User Message
     st.session_state["messages"].append({"role": "user", "content": user_text})
     with st.chat_message("user"):
-        st.markdown(fix_latex_format(user_text), unsafe_allow_html=False)
+        st.write('', unsafe_allow_html=False)
+        cols = st.columns([0.15, 0.85])
+        with cols[1]:
+            st.write(
+                f"<div style='background-color: #DCF8C6; color: #222; padding: 10px 15px; border-radius: 12px; max-width: 100%; word-break: break-word; text-align: right;'>{fix_latex_format(user_text)}</div>",
+                unsafe_allow_html=True
+            )
 
     # Call LangGraph
     with st.spinner("🧠 Thinking..."):
@@ -133,12 +137,10 @@ if prompt:
         assistant_msg = response_text.content if hasattr(response_text, "content") else str(response_text)
         st.session_state["messages"].append({"role": "assistant", "content": assistant_msg})
         with st.chat_message("assistant"):
-            st.markdown(
-                f"""
-                <div style='text-align: left; background-color: #F1F0F0; padding: 10px 15px; border-radius: 12px; display: inline-block; max-width: 85%;'>
-                    {fix_latex_format(assistant_msg)}
-                </div>
-                """,
-                unsafe_allow_html=True
-            )
+            cols = st.columns([0.85, 0.15])
+            with cols[0]:
+                st.write(
+                    f"<div style='background-color: #F1F0F0; color: #222; padding: 10px 15px; border-radius: 12px; max-width: 100%; word-break: break-word; text-align: left;'>{fix_latex_format(assistant_msg)}</div>",
+                    unsafe_allow_html=True
+                )
 
