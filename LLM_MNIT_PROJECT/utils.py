@@ -4,7 +4,8 @@ from langchain_community.document_loaders import (
     UnstructuredWordDocumentLoader,
     UnstructuredPowerPointLoader,
     UnstructuredFileLoader,
-    TextLoader
+    TextLoader,
+    PyPDFDirectoryLoader
 )
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders.youtube import YoutubeLoader
@@ -150,7 +151,38 @@ def wikipedia_tool(prompt):
     
     response= wiki_wrapper.run(prompt)
     return response
+def make_retreiver(directory_path):
+    """
+    Create a retriever from a document path.
+    Supports PDF, PPTX, DOCX, TXT, and MD files.
+    """
+    docs = PyPDFDirectoryLoader(directory_path).load()
+    print("Files in directory:", os.listdir(directory_path))
+    docs= RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200).split_documents(docs)
+    if not docs:
+        raise ValueError(f"No documents found in {directory_path}")
 
+    # Create embeddings and vector store
+    from langchain_huggingface import HuggingFaceEmbeddings
+    from langchain_community.vectorstores import FAISS
+    from langchain_community.retrievers import BM25Retriever
+    from langchain.retrievers import EnsembleRetriever
+    embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
+    vectordb = FAISS.from_documents(documents=docs, embedding=embeddings)
+    dense_retriever = vectordb.as_retriever(search_type="similarity", search_kwargs={"k": 3})
+
+    # Sparse retriever (BM25)
+    bm25_retriever = BM25Retriever.from_documents(docs)
+    bm25_retriever.k = 3
+
+    # Hybrid retriever (Ensemble)
+    hybrid_retriever = EnsembleRetriever(
+        retrievers=[dense_retriever, bm25_retriever],
+        weights=[0.5, 0.5]
+    )
+
+    return hybrid_retriever
+      # Return as retriever
 def arxiv_tool(prompt):
     if not prompt:
         raise ValueError("Prompt cannot be empty.")

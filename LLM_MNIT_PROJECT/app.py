@@ -1,7 +1,7 @@
 import streamlit as st
 from workflow import create_workflow
 import re
-
+graph = create_workflow()
 # ----------------------------
 # Latex Fixer
 # ----------------------------
@@ -58,8 +58,8 @@ if prompt:
     # Call Workflow
     with st.spinner("Processing your input..."):
         # Pass the Groq API key to the workflow if needed
-        graph = create_workflow(groq_api_key=st.session_state["groq_api_key"])
-        result = graph.invoke({"user_input": user_input})
+        
+        result = graph.invoke({"user_input": user_input,"groq_api_key": st.session_state["groq_api_key"]})
         response_text = result.get("response") if isinstance(result, dict) else None
 
     if response_text:
@@ -69,5 +69,5 @@ if prompt:
             st.markdown(fix_latex_format(assistant_msg), unsafe_allow_html=True)
 
             # Copy + Download options
-            st.download_button("⬇️ Download Response", assistant_msg, file_name="mnitgpt_response.txt")
-            st.markdown(f"<button onclick=\"navigator.clipboard.writeText(`{assistant_msg}`)\">📋 Copy</button>", unsafe_allow_html=True)
+   
+        

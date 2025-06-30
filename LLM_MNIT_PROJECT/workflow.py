@@ -2,7 +2,7 @@ from langgraph.graph import StateGraph, START, END
 from typing_extensions import TypedDict
 from utils import (
     has_url, find_urls, is_file, docreader, doc_prompt_merger, type_url,
-    youtube_reader, web_reader, wikipedia_tool, arxiv_tool, web_tool, save_uploaded_file
+    youtube_reader, web_reader, wikipedia_tool, arxiv_tool, web_tool, save_uploaded_file, make_retreiver
 )
 import os
 from dotenv import load_dotenv
@@ -17,9 +17,9 @@ import re
 load_dotenv()
 
 # Initialize LLMs
-llm1 = ChatCerebras(model="llama-4-scout-17b-16e-instruct", api_key=os.getenv("CEREBRAS_API_KEY"))
-llm2 = ChatGroq(model="deepseek-r1-distill-llama-70b", api_key=os.getenv("GROQ_API_KEY"))
-llm3 = ChatMistralAI(model="codestral-mamba-latest", api_key=os.getenv("MISTRAL_API_KEY"))
+
+
+
 
 class State(TypedDict):
     user_input: dict[str, str | list] | str
@@ -40,9 +40,17 @@ class State(TypedDict):
     data: str
     isfile: bool
     has_urls: bool
+    groq_api_key: str
+    syllabus: list[str]  # Assuming syllabus is a list of strings
+    syllabus_choice: str
+    tut_pyq: str
+    tutorial: list[str]
+    pyqs: list[str]
 
 
-
+syllabus_path=os.getcwd() + "/1stSem/syllabus"
+tutorial_path= os.getcwd() + "/1stSem/tutorials"
+pyq_path= os.getcwd() + "/1stSem/pyq"
 def check_for_file_node(state: State):
     state["isfile"] = is_file(state["user_input"])
     print("check_for_file_node:working fine")
@@ -113,6 +121,9 @@ def final_prompt_node(state: State):
         state.get("youtube_docs") or [],
         state.get("web_docs") or [],
         state.get("vectordb_docs") or [],
+        state.get("syllabus") or [],
+        state.get("tutorial") or [],
+        state.get("pyqs") or [],
     ]
     combined_docs = []
     for doc_list in docs_lists:
@@ -131,7 +142,30 @@ def final_prompt_node(state: State):
 
     context = "\n\n".join(context_parts).strip()
     text = state["user_input"].get("text", "") if isinstance(state["user_input"], dict) else state["user_input"]
-    state["final_prompt"] = f"Context: {context}\nUser Input: {text}"
+    state["final_prompt"] = f"""
+    System: You are MNITGPT, an intelligent academic assistant developed by Kapil Modi for students, researchers, and professors at MNIT. Your primary goal is to:
+
+1. Provide simplified yet technically accurate explanations of topics based on a curated vector database of tutorial solutions.
+2. Help students understand concepts in a short, clear, and engaging way — without oversimplifying or losing technical depth.
+3. Support PhD scholars and faculty by summarizing and explaining research papers using formal language, equations (LaTeX if needed), and proper terminology.
+4. Detect the user's intent (student-level vs. research-level) and adjust your language, format, and depth accordingly.
+5. If no file or link is provided, base your answer on internal knowledge and relevant context from the vector database.
+6. Always respond with a helpful, humble, and structured tone. Use markdown formatting where applicable.
+
+You were created by Kapil Modi to help MNIT students and faculty learn and teach more effectively.
+
+---
+
+When responding:
+
+- For students → provide crisp explanations, diagrams (in text), examples, and optional links for further reading.
+- For professors/PhD → use citations (if any), explain assumptions, methods, equations, and core ideas of papers.
+- If the user uploads a file or shares a link, extract meaningful content and summarize or explain it accordingly.
+
+Always maintain this identity and purpose in all responses.
+
+    Context: {context}\nUser Input: {text}
+"""
 
     print(f"[final_prompt_node] docs: {len(combined_docs)}, wiki_response: {bool(state.get('wiki_response'))}, web_response: {bool(state.get('web_response'))}, context: {bool(state.get('context'))}")
     print(f"[final_prompt_node] final_prompt set? {state['final_prompt'][:50]}")
@@ -139,7 +173,33 @@ def final_prompt_node(state: State):
     return state
 
 
-
+def mnit_syllabus(state: State):
+    """
+    This node is a placeholder for syllabus-related processing.
+    It can be extended to handle syllabus-specific logic.
+    """
+    # Example: Just echo the syllabus back
+    retriever = make_retreiver(syllabus_path)
+    state["syllabus"] = retriever.invoke(state.get("user_input", {}).get("text", ""))
+    return state
+def tutorials(state: State):
+    """
+    This node is a placeholder for tutorials-related processing.
+    It can be extended to handle tutorial-specific logic.
+    """
+    # Example: Just echo the tutorials back
+    retriever = make_retreiver(tutorial_path)
+    state["tutorial"] = retriever.invoke(state.get("user_input", {}).get("text", ""))
+    return state
+def pyq(state: State):
+    """
+    This node is a placeholder for previous year questions (PYQ) related processing.
+    It can be extended to handle PYQ-specific logic.
+    """
+    # Example: Just echo the PYQ back
+    retriever = make_retreiver(pyq_path)
+    state["pyqs"] = retriever.invoke(state.get("user_input", {}).get("text", ""))
+    return state
 def vectordb_node(state: State):
     retriever = get_retriever()
     text = state["user_input"].get("text", "")
@@ -152,6 +212,7 @@ def vectordb_node(state: State):
     return state
 
 def llm1_node(state: State):
+    llm1 = ChatCerebras(model="llama-4-scout-17b-16e-instruct", api_key=os.getenv("CEREBRAS_API_KEY"))
     prompt = state.get("merged_prompt") or state.get("final_prompt")
     if prompt is None:
         raise ValueError("Neither 'merged_prompt' nor 'final_prompt' is set in the state before calling llm1_node.")
@@ -161,6 +222,7 @@ def llm1_node(state: State):
     return state
 
 def llm2_node(state: State):
+    llm2 = ChatGroq(model="deepseek-r1-distill-llama-70b", api_key=state.get("groq_api_key") or os.getenv("GROQ_API_KEY"))
     prompt = state.get("merged_prompt") or state.get("final_prompt")
     if prompt is None:
         raise ValueError("Neither 'merged_prompt' nor 'final_prompt' is set in the state before calling llm2_node.")
@@ -171,7 +233,21 @@ def llm2_node(state: State):
 
 
 router_llm = ChatCerebras(model="llama-4-scout-17b-16e-instruct", api_key=os.getenv("CEREBRAS_API_KEY"), temperature=0)
-
+syllabus_prompt= PromptTemplate.from_template("""
+You are an intelligent router. Based on the user prompt, choose the most appropriate context:
+- "syllabus" for syllabus-related queries or academic queries
+- "None" for other queries if its tutorial or pyq 
+Just reply with one word.[syllabus, None].
+Prompt: {input}
+""")
+tutorial_pyq_prompt= PromptTemplate.from_template("""
+You are an intelligent router. Based on the user prompt, choose the most appropriate context:
+- "tutorial" for tutorials-related queries
+- "pyq" for previous year questions related queries
+- "None" for other queries
+Just reply with one word.[tutorial, pyq, None].
+Prompt: {input}
+""")
 routing_prompt = PromptTemplate.from_template("""
 You are an intelligent router. Based on the user prompt, choose the most appropriate LLM:
 - "groq" for fast and reasoning answers and high coding tasks
@@ -187,9 +263,30 @@ You are an intelligent router. Based on the user prompt, choose the appropriate 
 - websearch: for other normal queries
 - arxiv: for academic papers and research
 - none: if no specific context is needed
+and remember if the topic is about tutorial or pyq send wiki
 Just reply with one word.[wiki, websearch, arxiv,none].
 Prompt: {input}
 """)
+
+def syllabus_node(state: State):
+    text = state["user_input"].get("text", "")
+    result = router_llm.invoke(syllabus_prompt.invoke({"input": text}))
+    syllabus_choice = result.content.strip().lower() if hasattr(result, "content") else str(result).lower()
+    state["syllabus_choice"] = syllabus_choice
+    return state
+def tutorials_pyq_node(state: State):
+    text = state["user_input"].get("text", "")
+    result = router_llm.invoke(tutorial_pyq_prompt.invoke({"input": text}))
+    tut_pyq_choice = result.content.strip().lower() if hasattr(result, "content") else str(result).lower()
+    
+    if tut_pyq_choice == "tutorial":
+        state["tut_pyq"] = "tutorial"
+    elif tut_pyq_choice == "pyq":
+        state["tut_pyq"] = "pyq"
+    else:
+        state["tut_pyq"] = "None"
+    
+    return state
 
 def data_routing_node(state: State):
     text = state["user_input"].get("text", "")
@@ -238,7 +335,11 @@ def create_workflow():
     graph.add_node("vectordb_node", vectordb_node)
     graph.add_node("final_prompt_node", final_prompt_node)
     graph.add_node("routing_node", routing_node)
-   
+    graph.add_node("syllabus_node", syllabus_node)
+    graph.add_node("tutorials_pyq_node", tutorials_pyq_node)
+    graph.add_node("mnit_syllabus", mnit_syllabus)
+    graph.add_node("tutorials", tutorials)
+    graph.add_node("pyq", pyq)
     graph.add_node("llm1_node", llm1_node)
     graph.add_node("llm2_node", llm2_node)
     
@@ -284,9 +385,31 @@ def create_workflow():
         lambda state: "has_urls" if state.get("urls") else "no_urls",
         path_map={
             "has_urls": "url_type_node",
-            "no_urls": "data_routing_node"
+            "no_urls": "syllabus_node"
         }
     )
+    graph.add_conditional_edges(
+        "syllabus_node",
+        lambda state: state.get("syllabus_choice","None"),
+        path_map={
+            "syllabus": "mnit_syllabus",
+            "None": "tutorials_pyq_node",
+            "none": "tutorials_pyq_node"  # Default to tutorials/pyq if not specified
+        }
+    )
+    graph.add_edge("mnit_syllabus", "tutorials_pyq_node")
+    graph.add_conditional_edges(
+        "tutorials_pyq_node",
+        lambda state: state.get("tut_pyq","None"),
+        path_map={
+            "tutorial": "tutorials",
+            "pyq": "pyq",
+            "None": "data_routing_node"
+        }
+    )
+    graph.add_edge("tutorials", "data_routing_node")
+    graph.add_edge("pyq", "data_routing_node")
+    
 
     # URL types
     graph.add_conditional_edges(

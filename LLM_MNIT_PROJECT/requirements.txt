@@ -18,10 +18,11 @@ langchain-groq
 groq
 langchain_mistralai
 unstructured
-unstructured[pptx]
-unstructured[pdf]
+
 validators
 streamlit
 streamlit-chat
 youtube_transcript-api
 streamlit-authenticator
+faiss-cpu
+rank_bm25
