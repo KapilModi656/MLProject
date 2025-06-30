@@ -263,7 +263,7 @@ You are an intelligent router. Based on the user prompt, choose the most appropr
 - "tutorial" for tutorials-related queries
 - "pyq" for previous year questions related queries
 - "none" for other queries
-Just reply with one word.[tutorial, pyq, None].
+Just reply with one word.[tutorial, pyq, none].
 Prompt: {input}
 """)
 routing_prompt = PromptTemplate.from_template("""
@@ -302,7 +302,7 @@ def tutorials_pyq_node(state: State):
     elif tut_pyq_choice == "pyq":
         state["tut_pyq"] = "pyq"
     else:
-        state["tut_pyq"] = "None"
+        state["tut_pyq"] = "none"
     
     return state
 
