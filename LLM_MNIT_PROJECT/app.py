@@ -17,36 +17,24 @@ def fix_latex_format(text: str) -> str:
         text = str(text)
     text = clean_custom_tags(text)
 
-    # Protect full LaTeX blocks
-    def protect_latex_blocks(text):
-        latex_blocks = []
-        def repl(match):
-            latex_blocks.append(match.group(0))
-            return f"__LATEX_BLOCK_{len(latex_blocks)-1}__"
-        return re.sub(
-            r'(\$\$.*?\$\$|\\\[.*?\\\]|\\\(.*?\\\)|\\begin\{.*?\}.*?\\end\{.*?\})',
-            repl, text, flags=re.DOTALL
-        ), latex_blocks
+    # Convert flat 3x3 matrix rows into LaTeX matrix block
+    def detect_matrix_block(match):
+        nums = match.group(0).strip().split()
+        if len(nums) % 3 == 0:
+            rows = [' & '.join(nums[i:i+3]) for i in range(0, len(nums), 3)]
+            latex_matrix = "\\begin{bmatrix}\n" + ' \\\\\n'.join(rows) + "\n\\end{bmatrix}"
+            return f"\n$$\n{latex_matrix}\n$$\n"
+        return match.group(0)
 
-    def restore_latex_blocks(text, latex_blocks):
-        for i, block in enumerate(latex_blocks):
-            text = text.replace(f"__LATEX_BLOCK_{i}__", block)
-        return text
+    # Match lines of digits that look like matrix rows
+    text = re.sub(r'(?:\d+[\s-]+)+\d+', detect_matrix_block, text)
 
-    # Protect LaTeX
-    text, latex_blocks = protect_latex_blocks(text)
+    # Make sure any \begin{bmatrix} blocks are wrapped in $$ if not already
+    text = re.sub(r'(?<!\$)\s*(\\begin\{bmatrix\}.*?\\end\{bmatrix\})\s*(?!\$)', r'$$\1$$', text, flags=re.DOTALL)
 
-    # Wrap matrix-style latex (A = \begin{bmatrix} ... \end{bmatrix}) in code block
-    def matrix_block(match):
-        return f"\n```latex\n{match.group(1)}\n```\n"
-    text = re.sub(r"\(([^()]*\\begin\{bmatrix\}.*?\\end\{bmatrix\}[^()]*)\)", matrix_block, text, flags=re.DOTALL)
-
-
-    # Escape standalone [ and ]
+    # Escape stray square brackets
     text = text.replace('[', '\\[').replace(']', '\\]')
 
-    # Restore protected latex blocks
-    text = restore_latex_blocks(text, latex_blocks)
     return text
 
 
