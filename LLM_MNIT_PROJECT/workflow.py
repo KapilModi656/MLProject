@@ -12,7 +12,7 @@ from langchain_mistralai import ChatMistralAI
 from langchain_core.prompts import PromptTemplate
 from langchain_core.runnables import RunnableLambda, RunnableSequence
 from database import get_retriever
-from IPython.display import Image, display
+
 import re
 load_dotenv()
 
@@ -492,6 +492,3 @@ def create_workflow():
 
     return graph.compile()
 
-graph = create_workflow()
-with open("graph.png", "wb") as f:
-    f.write(graph.get_graph().draw_mermaid_png())
