@@ -76,4 +76,4 @@ if prompt:
         assistant_msg = response_text.content if hasattr(response_text, "content") else str(response_text)
         st.session_state["messages"].append({"role": "assistant", "content": assistant_msg})
         with st.chat_message("assistant"):
-            st.markdown(fix_latex_format(assistant_msg), unsafe_allow_html=True)
+            st.markdown(fix_latex_format(assistant_msg))
