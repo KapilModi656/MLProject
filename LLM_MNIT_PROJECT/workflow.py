@@ -48,9 +48,9 @@ class State(TypedDict):
     pyqs: list[str]
 
 
-syllabus_path=os.getcwd() + "/1stSem/syllabus"
-tutorial_path= os.getcwd() + "/1stSem/tutorials"
-pyq_path= os.getcwd() + "/1stSem/pyq"
+syllabus_path=os.getcwd() + "/LLM_MNIT_PROJECT/1stSem/syllabus"
+tutorial_path= os.getcwd() + "/LLM_MNIT_PROJECT/1stSem/tutorials"
+pyq_path= os.getcwd() + "/LLM_MNIT_PROJECT/1stSem/pyq"
 def check_for_file_node(state: State):
     state["isfile"] = is_file(state["user_input"])
     print("check_for_file_node:working fine")
