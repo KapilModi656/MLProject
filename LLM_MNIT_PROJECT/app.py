@@ -50,7 +50,7 @@ if "messages" not in st.session_state:
 # Display Chat History
 for msg in st.session_state["messages"]:
     with st.chat_message(msg["role"]):
-        st.markdown(fix_latex_format(msg["content"]), unsafe_allow_html=True)
+        st.markdown(fix_latex_format(msg["content"]))
 
 # User Input
 prompt = st.chat_input(placeholder="Enter your question or upload a file:", accept_file="multiple")
