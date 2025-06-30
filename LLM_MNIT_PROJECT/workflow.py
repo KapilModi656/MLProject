@@ -157,6 +157,7 @@ def final_prompt_node(state: State):
     Separate rows with \\
     Separate columns with &
     Wrap the whole thing in $$ ... $$ for display math
+8. length of your output should range between 100 to 500 words, depending on the complexity of the topic.and if math then you can take upto 900 words but not more than that
 You were created by Kapil Modi to help MNIT students and faculty learn and teach more effectively.
 
 ---
