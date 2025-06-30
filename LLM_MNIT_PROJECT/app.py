@@ -86,23 +86,45 @@ for msg in st.session_state["messages"]:
     with st.chat_message(msg["role"]):
         content = fix_latex_format(msg["content"])
         if msg["role"] == "user":
-            st.write(  # right-aligned using st.write and a blank column for spacing
-                '',
-                unsafe_allow_html=False
-            )
+            st.write('', unsafe_allow_html=False)
             cols = st.columns([0.15, 0.85])
             with cols[1]:
                 st.write(
-                    f"<div style='background-color: #DCF8C6; color: #222; padding: 10px 15px; border-radius: 12px; max-width: 100%; word-break: break-word; text-align: right;'>{content}</div>",
+                    f"""
+                    <div style='background-color: var(--user-bubble-bg, #2e7d32); color: var(--user-bubble-fg, #fff); padding: 10px 15px; border-radius: 12px; max-width: 100%; word-break: break-word; text-align: right;'>
+                        {content}
+                    </div>
+                    """,
                     unsafe_allow_html=True
                 )
         else:
             cols = st.columns([0.85, 0.15])
             with cols[0]:
                 st.write(
-                    f"<div style='background-color: #F1F0F0; color: #222; padding: 10px 15px; border-radius: 12px; max-width: 100%; word-break: break-word; text-align: left;'>{content}</div>",
+                    f"""
+                    <div style='background-color: var(--assistant-bubble-bg, #424242); color: var(--assistant-bubble-fg, #fff); padding: 10px 15px; border-radius: 12px; max-width: 100%; word-break: break-word; text-align: left;'>
+                        {content}
+                    </div>
+                    """,
                     unsafe_allow_html=True
                 )
+# Inject CSS for dark/light mode compatibility
+st.markdown('''
+    <style>
+    html[data-theme="dark"] {
+        --user-bubble-bg: #2e7d32;
+        --user-bubble-fg: #fff;
+        --assistant-bubble-bg: #424242;
+        --assistant-bubble-fg: #fff;
+    }
+    html[data-theme="light"] {
+        --user-bubble-bg: #DCF8C6;
+        --user-bubble-fg: #222;
+        --assistant-bubble-bg: #F1F0F0;
+        --assistant-bubble-fg: #222;
+    }
+    </style>
+''', unsafe_allow_html=True)
 
 # ----------------------------
 # Chat Input
@@ -121,7 +143,11 @@ if prompt:
         cols = st.columns([0.15, 0.85])
         with cols[1]:
             st.write(
-                f"<div style='background-color: #DCF8C6; color: #222; padding: 10px 15px; border-radius: 12px; max-width: 100%; word-break: break-word; text-align: right;'>{fix_latex_format(user_text)}</div>",
+                f"""
+                <div style='background-color: var(--user-bubble-bg, #2e7d32); color: var(--user-bubble-fg, #fff); padding: 10px 15px; border-radius: 12px; max-width: 100%; word-break: break-word; text-align: right;'>
+                    {fix_latex_format(user_text)}
+                </div>
+                """,
                 unsafe_allow_html=True
             )
 
@@ -140,7 +166,11 @@ if prompt:
             cols = st.columns([0.85, 0.15])
             with cols[0]:
                 st.write(
-                    f"<div style='background-color: #F1F0F0; color: #222; padding: 10px 15px; border-radius: 12px; max-width: 100%; word-break: break-word; text-align: left;'>{fix_latex_format(assistant_msg)}</div>",
+                    f"""
+                    <div style='background-color: var(--assistant-bubble-bg, #424242); color: var(--assistant-bubble-fg, #fff); padding: 10px 15px; border-radius: 12px; max-width: 100%; word-break: break-word; text-align: left;'>
+                        {fix_latex_format(assistant_msg)}
+                    </div>
+                    """,
                     unsafe_allow_html=True
                 )
 
