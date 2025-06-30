@@ -85,10 +85,23 @@ if "messages" not in st.session_state:
 for msg in st.session_state["messages"]:
     with st.chat_message(msg["role"]):
         msg_id = str(uuid.uuid4()).replace('-', '')
-        st.markdown(fix_latex_format(msg["content"]), unsafe_allow_html=True)
-        if msg["role"] == "assistant":
-            with st.expander("📋 Copy", expanded=False):
-                st.code(msg["content"], language="markdown")
+        if msg["role"] == "user":
+            st.markdown(f'''
+                <div style="display: flex; justify-content: flex-end;">
+                    <div style="background: #DCF8C6; color: #222; padding: 10px 16px; border-radius: 16px; max-width: 80%; margin: 4px 0; text-align: right;">
+                        {fix_latex_format(msg["content"])}
+                    </div>
+                </div>
+            ''', unsafe_allow_html=True)
+        else:
+            st.markdown(f'''
+                <div style="display: flex; justify-content: flex-start;">
+                    <div style="background: #F1F0F0; color: #222; padding: 10px 16px; border-radius: 16px; max-width: 80%; margin: 4px 0; text-align: left;">
+                        {fix_latex_format(msg["content"])}
+                    </div>
+                </div>
+            ''', unsafe_allow_html=True)
+           
 
 # ----------------------------
 # Chat Input
@@ -103,7 +116,13 @@ if prompt:
     # Show User Message
     st.session_state["messages"].append({"role": "user", "content": user_text})
     with st.chat_message("user"):
-        st.markdown(fix_latex_format(user_text), unsafe_allow_html=False)
+        st.markdown(f'''
+            <div style="display: flex; justify-content: flex-end;">
+                <div style="background: #DCF8C6; color: #222; padding: 10px 16px; border-radius: 16px; max-width: 80%; margin: 4px 0; text-align: right;">
+                    {fix_latex_format(user_text)}
+                </div>
+            </div>
+        ''', unsafe_allow_html=True)
 
     # Call LangGraph
     with st.spinner("🧠 Thinking..."):
@@ -117,5 +136,11 @@ if prompt:
         assistant_msg = response_text.content if hasattr(response_text, "content") else str(response_text)
         st.session_state["messages"].append({"role": "assistant", "content": assistant_msg})
         with st.chat_message("assistant"):
-            st.markdown(fix_latex_format(assistant_msg), unsafe_allow_html=True)
-            
+            st.markdown(f'''
+                <div style="display: flex; justify-content: flex-start;">
+                    <div style="background: #F1F0F0; color: #222; padding: 10px 16px; border-radius: 16px; max-width: 80%; margin: 4px 0; text-align: left;">
+                        {fix_latex_format(assistant_msg)}
+                    </div>
+                </div>
+            ''', unsafe_allow_html=True)
+
