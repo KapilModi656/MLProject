@@ -13,21 +13,26 @@ def clean_custom_tags(text: str) -> str:
 def fix_latex_format(text: str) -> str:
     if not isinstance(text, str):
         text = str(text)
-    # Remove <think> tags
     text = clean_custom_tags(text)
-    # Escape square brackets outside LaTeX blocks to avoid HTML rendering issues
-    def escape_brackets(match):
-        content = match.group(0)
-        # If it's a LaTeX block, don't escape
-        if content.startswith("\\[") or content.startswith("\\begin"):
-            return content
-        # Otherwise, escape [ and ]
-        return content.replace('[', '\\[').replace(']', '\\]')
-    # Only escape brackets not in LaTeX environments
-    text = re.sub(r'\[.*?\]', escape_brackets, text)
-    # Optionally wrap LaTeX in $$
-    if "\\" in text and not text.strip().startswith("$$"):
-        text = f"$$\n{text.strip()}\n$$"
+    # Protect LaTeX blocks so we don't escape inside them
+    def protect_latex_blocks(text):
+        latex_blocks = []
+        def repl(match):
+            latex_blocks.append(match.group(0))
+            return f"__LATEX_BLOCK_{len(latex_blocks)-1}__"
+        # Find all LaTeX blocks (\[...\], \(...\), $$...$$, \begin{...}...\end{...})
+        text = re.sub(r'(\\\[.*?\\\]|\\\(.*?\\\)|\$\$.*?\$\$|\\begin\{.*?\}.*?\\end\{.*?\})', repl, text, flags=re.DOTALL)
+        return text, latex_blocks
+    def restore_latex_blocks(text, latex_blocks):
+        for i, block in enumerate(latex_blocks):
+            text = text.replace(f"__LATEX_BLOCK_{i}__", block)
+        return text
+    # Protect LaTeX blocks
+    text, latex_blocks = protect_latex_blocks(text)
+    # Escape [ and ] outside LaTeX
+    text = text.replace('[', '\\[').replace(']', '\\]')
+    # Restore LaTeX blocks
+    text = restore_latex_blocks(text, latex_blocks)
     return text
 
 # ----------------------------
@@ -60,7 +65,7 @@ if "messages" not in st.session_state:
 # Display Chat History
 for msg in st.session_state["messages"]:
     with st.chat_message(msg["role"]):
-        st.markdown(fix_latex_format(msg["content"]))
+        st.markdown(fix_latex_format(msg["content"]), unsafe_allow_html=False)
 
 # User Input
 prompt = st.chat_input(placeholder="Enter your question or upload a file:", accept_file="multiple")
@@ -73,7 +78,7 @@ if prompt:
     # Show User Message
     st.session_state["messages"].append({"role": "user", "content": user_text})
     with st.chat_message("user"):
-        st.markdown(fix_latex_format(user_text), unsafe_allow_html=True)
+        st.markdown(fix_latex_format(user_text), unsafe_allow_html=False)
 
     # Call Workflow
     with st.spinner("Processing your input..."):
@@ -86,4 +91,4 @@ if prompt:
         assistant_msg = response_text.content if hasattr(response_text, "content") else str(response_text)
         st.session_state["messages"].append({"role": "assistant", "content": assistant_msg})
         with st.chat_message("assistant"):
-            st.markdown(fix_latex_format(assistant_msg))
+            st.markdown(fix_latex_format(assistant_msg), unsafe_allow_html=False)
