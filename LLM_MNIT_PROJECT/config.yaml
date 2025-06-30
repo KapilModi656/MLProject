@@ -1,0 +1,11 @@
+credentials:
+  usernames:
+    yourusername:
+      email: your@email.com
+      name: Your Name
+      password: "hashed-password"
+
+cookie:
+  name: some_cookie_name
+  key: some_secret_key
+  expiry_days: 30

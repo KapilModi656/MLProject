@@ -1,50 +1,73 @@
 import streamlit as st
-from workflow import create_workflow  # make sure this file is error-free and in the same dir
+from workflow import create_workflow
+import re
 
-# Initialize LangGraph
+# ----------------------------
+# Latex Fixer
+# ----------------------------
+def fix_latex_format(text: str) -> str:
+    if not isinstance(text, str):
+        text = str(text)
+    return re.sub(r"\[\s*(\\.+?)\s*\]", r"$$\1$$", text)
 
-
-
-
-
-# Streamlit UI
+# ----------------------------
+# Streamlit App UI
+# ----------------------------
 st.set_page_config(page_title="MNITGPT", layout="centered")
 st.title("🧠 MNITGPT")
 st.markdown("This app uses a LangGraph workflow to intelligently process files, links, and prompts with LLMs.")
 
-# File upload
+# --- API Key Management ---
+if "groq_api_key" not in st.session_state:
+    st.session_state["groq_api_key"] = ""
 
+with st.sidebar:
+    st.markdown("### 🔑 Groq API Key")
+    groq_key = st.text_input(
+        "Enter your Groq API Key:",
+        value=st.session_state["groq_api_key"],
+        type="password",
+        help="Your key is stored only in your browser session and never sent to anyone except Groq."
+    )
+    if groq_key != st.session_state["groq_api_key"]:
+        st.session_state["groq_api_key"] = groq_key
+        st.success("Groq API key updated!")
 
-# Text input
-prompt = st.chat_input(placeholder="Or enter your query here:",accept_file="multiple")
+# Session Messages
+if "messages" not in st.session_state:
+    st.session_state["messages"] = []
 
-# Combine inputs
+# Display Chat History
+for msg in st.session_state["messages"]:
+    with st.chat_message(msg["role"]):
+        st.markdown(fix_latex_format(msg["content"]), unsafe_allow_html=True)
+
+# User Input
+prompt = st.chat_input(placeholder="Enter your question or upload a file:", accept_file="multiple")
+
 if prompt:
-    user_input = {"text": prompt.text, "files": prompt.files} if hasattr(prompt, 'files') else {"text": prompt, "files": []}
-    if "message" not in st.session_state:
-        text = user_input["text"] if isinstance(user_input["text"], str) else str(user_input["text"])
-        st.session_state["message"] = text
-        with st.chat_message(name ="user"):
-            st.write(text)
-    else:
-        text = user_input["text"] if isinstance(user_input["text"], str) else str(user_input["text"])
-        st.session_state["message"] += f"\n{text}"
+    user_text = prompt.text if hasattr(prompt, 'text') else str(prompt)
+    user_files = prompt.files if hasattr(prompt, 'files') else []
+    user_input = {"text": user_text, "files": user_files}
+
+    # Show User Message
+    st.session_state["messages"].append({"role": "user", "content": user_text})
+    with st.chat_message("user"):
+        st.markdown(fix_latex_format(user_text), unsafe_allow_html=True)
+
+    # Call Workflow
     with st.spinner("Processing your input..."):
-        
-
-        
-        state = {"user_input": user_input}
-        
-        graph = create_workflow()
-        # Initial state to send to LangGraph
-        
-
-        # Call the LangGraph
-        result = graph.invoke(state)
+        # Pass the Groq API key to the workflow if needed
+        graph = create_workflow(groq_api_key=st.session_state["groq_api_key"])
+        result = graph.invoke({"user_input": user_input})
         response_text = result.get("response") if isinstance(result, dict) else None
-        # Display result
-        with st.chat_message("assistant"):
-            st.write(response_text.content)
 
-        st.session_state["message"] += f"\n{response_text.content}"
-        
+    if response_text:
+        assistant_msg = response_text.content if hasattr(response_text, "content") else str(response_text)
+        st.session_state["messages"].append({"role": "assistant", "content": assistant_msg})
+        with st.chat_message("assistant"):
+            st.markdown(fix_latex_format(assistant_msg), unsafe_allow_html=True)
+
+            # Copy + Download options
+            st.download_button("⬇️ Download Response", assistant_msg, file_name="mnitgpt_response.txt")
+            st.markdown(f"<button onclick=\"navigator.clipboard.writeText(`{assistant_msg}`)\">📋 Copy</button>", unsafe_allow_html=True)

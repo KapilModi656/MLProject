@@ -2,76 +2,97 @@
 
 from langchain_community.document_loaders import UnstructuredFileLoader, DirectoryLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_community.vectorstores import Milvus
+from langchain_milvus import Milvus
 from langchain_huggingface import HuggingFaceEmbeddings
-
 import os
 from dotenv import load_dotenv
 from pymilvus import connections, utility
-
+import asyncio
 load_dotenv()
 
-def setup_vectordb():
-    # Connect to Zilliz / Milvus server
+COLLECTION_NAME = "llm_mnit_project_collection"
+
+def connect_to_milvus():
+    # Ensure event loop exists for Milvus async internals
+    try:
+        loop = asyncio.get_event_loop()
+    except RuntimeError:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+
     connections.connect(
         alias="default",
-        uri="https://in03-16ead69f302718e.serverless.gcp-us-west1.cloud.zilliz.com",
-        token=os.getenv("ZILLIZ_API_KEY")
+        uri=os.getenv("ZILLIZ_URI"),
+        token=os.getenv("ZILLIZ_API_KEY"),
+        user=os.getenv("ZILLIZ_USER"),
+        password=os.getenv("ZILLIZ_PASSWORD"),
     )
 
-    # Load documents from PDF and PPTX folders
-    loader1 = DirectoryLoader("1stSem/pdf", glob="**/*.pdf", silent_errors=True, loader_cls=UnstructuredFileLoader)
-    loader2 = DirectoryLoader("1stSem/pptx", glob="**/*.pptx", silent_errors=True, loader_cls=UnstructuredFileLoader)
+def ingest_documents():
+    """
+    Load documents from folders, split, embed and upload to Milvus.
+    Drops the old collection if exists, then recreates.
+    """
+    connect_to_milvus()
 
-    docs1 = loader1.load()
-    docs2 = loader2.load()
-    docs = docs1 + docs2
+    # Load PDFs and PPTX documents
+    loader_pdf = DirectoryLoader("1stSem/pdf", glob="**/*.pdf", silent_errors=True, loader_cls=UnstructuredFileLoader)
+    loader_pptx = DirectoryLoader("1stSem/pptx", glob="**/*.pptx", silent_errors=True, loader_cls=UnstructuredFileLoader)
 
-    # Split into smaller chunks
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
-    docs = text_splitter.split_documents(docs)
+    docs_pdf = loader_pdf.load()
+    docs_pptx = loader_pptx.load()
+    all_docs = docs_pdf + docs_pptx
 
-    # Embedding model (MiniLM)
+    # Split documents into chunks
+    splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
+    split_docs = splitter.split_documents(all_docs)
+
+    # Prepare embeddings
     embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
 
-    # Milvus collection name
-    collection_name = "llm_mnit_project_collection"
-
     # Drop collection if it exists
-    if utility.has_collection(collection_name):
-        utility.drop_collection(collection_name)
+    if utility.has_collection(COLLECTION_NAME):
+        utility.drop_collection(COLLECTION_NAME)
 
-    # Create Milvus vectorstore
+    # Create vector store and upload documents
     vectordb = Milvus.from_documents(
-        documents=docs,
+        documents=split_docs,
         embedding=embeddings,
         connection_args={
-            "uri": "https://in03-16ead69f302718e.serverless.gcp-us-west1.cloud.zilliz.com",
+            "uri": os.getenv("ZILLIZ_URI"),
             "token": os.getenv("ZILLIZ_API_KEY"),
             "user": os.getenv("ZILLIZ_USER"),
             "password": os.getenv("ZILLIZ_PASSWORD"),
-            "collection_name": collection_name,
-            
+            "collection_name": COLLECTION_NAME,
         }
     )
     return vectordb
 
-# Lazy load vectordb singleton
-_vectordb_instance = None
-def get_vectordb():
-    global _vectordb_instance
-    if _vectordb_instance is None:
-        _vectordb_instance = setup_vectordb()
-    return _vectordb_instance
-
 def get_retriever():
-    vectordb = get_vectordb()
-    return vectordb.as_retriever(
-        search_kwargs={
-            "k": 5,
-            "filter": None,
-            "search_type": "hybrid",
-            "score_threshold": 0.5,
+    """
+    Connect to Milvus and return a retriever object.
+    Does NOT perform ingestion.
+    """
+    connect_to_milvus()
+
+    embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
+
+    vectordb = Milvus(
+        embedding_function=embeddings,
+        collection_name=COLLECTION_NAME,
+        connection_args={
+            "uri": os.getenv("ZILLIZ_URI"),
+            "token": os.getenv("ZILLIZ_API_KEY"),
+            "user": os.getenv("ZILLIZ_USER"),
+            "password": os.getenv("ZILLIZ_PASSWORD"),
         }
     )
-retreiver= get_retriever()
+
+    retriever = vectordb.as_retriever(
+        search_kwargs={
+            "k": 5,
+            "search_type": "hybrid",
+            "score_threshold": 0.0,
+        }
+    )
+    return retriever

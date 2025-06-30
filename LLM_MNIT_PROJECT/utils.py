@@ -1,4 +1,11 @@
-from langchain_community.document_loaders import UnstructuredFileLoader
+from langchain_community.document_loaders import (
+    PyPDFLoader,
+    UnstructuredPDFLoader,
+    UnstructuredWordDocumentLoader,
+    UnstructuredPowerPointLoader,
+    UnstructuredFileLoader,
+    TextLoader
+)
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders.youtube import YoutubeLoader
 import re
@@ -37,15 +44,38 @@ def save_uploaded_file(file):
         f.write(file.read())
 
     return file_path
-def docreader(file_path):
-    if file_path.endswith(('.pdf', '.txt', '.docx', '.pptx')):
-        loader = UnstructuredFileLoader(file_path)
-        docs=loader.load()
-        docs= RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200).split_documents(docs)
-    else:
-        raise ValueError("Unsupported file type. Supported types are: .pdf, .txt, .docx, .pptx")
-    
-    return docs
+def docreader(path: str):
+    ext = os.path.splitext(path)[-1].lower()
+
+    try:
+        if ext == ".pdf":
+            try:
+                # Try pure PDF loader first
+                loader = PyPDFLoader(path)
+            except Exception as e:
+                print(f"[Fallback] Using UnstructuredPDFLoader for PDF: {e}")
+                loader = UnstructuredPDFLoader(path)
+
+        elif ext in [".doc", ".docx"]:
+            loader = UnstructuredWordDocumentLoader(path)
+
+        elif ext in [".ppt", ".pptx"]:
+            loader = UnstructuredPowerPointLoader(path)
+
+        elif ext in [".txt", ".md"]:
+            loader = TextLoader(path)
+
+        else:
+            print("[Warning] Unknown file type, using UnstructuredFileLoader")
+            loader = UnstructuredFileLoader(path)
+
+        docs = loader.load()
+        docs = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200).split_documents(docs)
+        return docs
+
+    except Exception as e:
+        print(f"[Error] Failed to load file {path}: {e}")
+        return []
 
 def doc_prompt_merger(prompt, doc):
     if not doc:
@@ -117,8 +147,8 @@ def wikipedia_tool(prompt):
         raise ValueError("Prompt cannot be empty.")
     wiki_wrapper = WikipediaAPIWrapper()
     
-    wiki_tool = WikipediaQueryRun(wiki_wrapper)
-    response= wiki_tool.run(prompt)
+    
+    response= wiki_wrapper.run(prompt)
     return response
 
 def arxiv_tool(prompt):
@@ -126,9 +156,9 @@ def arxiv_tool(prompt):
         raise ValueError("Prompt cannot be empty.")
     arxiv_wrapper = ArxivAPIWrapper()
     
-    arxiv_tool = ArxivQueryRun(arxiv_wrapper)
-    response= arxiv_tool.run(prompt)
-    return response
+    arxiv_query_tool = ArxivQueryRun(api_wrapper=arxiv_wrapper)
+    result = arxiv_query_tool.invoke(prompt)
+    return [result] if isinstance(result, str) else result
 def web_tool(prompt):
     if not prompt:
         raise ValueError("Prompt cannot be empty.")

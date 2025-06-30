@@ -11,7 +11,7 @@ from langchain_groq import ChatGroq
 from langchain_mistralai import ChatMistralAI
 from langchain_core.prompts import PromptTemplate
 from langchain_core.runnables import RunnableLambda, RunnableSequence
-from vector import get_retriever
+from database import get_retriever
 from IPython.display import Image, display
 import re
 load_dotenv()
@@ -19,7 +19,7 @@ load_dotenv()
 # Initialize LLMs
 llm1 = ChatCerebras(model="llama-4-scout-17b-16e-instruct", api_key=os.getenv("CEREBRAS_API_KEY"))
 llm2 = ChatGroq(model="deepseek-r1-distill-llama-70b", api_key=os.getenv("GROQ_API_KEY"))
-llm3 = ChatMistralAI(model="open-codestral-mamba", api_key=os.getenv("MISTRAL_API_KEY"))
+llm3 = ChatMistralAI(model="codestral-mamba-latest", api_key=os.getenv("MISTRAL_API_KEY"))
 
 class State(TypedDict):
     user_input: dict[str, str | list] | str
@@ -34,6 +34,7 @@ class State(TypedDict):
     arxiv_docs: list[str]
     wiki_response: str
     web_response: str
+    vectordb_docs: list[str]  # Assuming this is a list of documents from the vector database
     url_types: dict[str, list[str]]
     final_prompt: str
     data: str
@@ -141,10 +142,14 @@ def final_prompt_node(state: State):
 
 def vectordb_node(state: State):
     retriever = get_retriever()
-    text = state["user_input"].get("text", "") if isinstance(state["user_input"], dict) else state["user_input"]
-    state["context"] = retriever.invoke(text)
-    print(f"[vectordb_node] context set? {bool(state['context'])}")
-    return {"has_context": state} if state["context"] else {"no_context": state}
+    text = state["user_input"].get("text", "")
+
+    result = retriever.invoke(text)
+    print(f"[vectordb_node] context set? {bool(result)}")
+    print(f"[vectordb_node] raw context: {result}")
+
+    state["vectordb_docs"] = result
+    return state
 
 def llm1_node(state: State):
     prompt = state.get("merged_prompt") or state.get("final_prompt")
@@ -163,31 +168,26 @@ def llm2_node(state: State):
     state["response"] = llm2.invoke(prompt)
     return state
 
-def llm3_node(state: State):
-    prompt = state.get("merged_prompt") or state.get("final_prompt")
-    if prompt is None:
-        raise ValueError("Neither 'merged_prompt' nor 'final_prompt' is set in the state before calling llm3_node.")
-    print(f"[llm3_node] Using prompt: {prompt[:50]}...")  # Log first 50 chars of prompt
-    state["response"] = llm3.invoke(prompt)
-    return state
+
 
 router_llm = ChatCerebras(model="llama-4-scout-17b-16e-instruct", api_key=os.getenv("CEREBRAS_API_KEY"), temperature=0)
 
 routing_prompt = PromptTemplate.from_template("""
 You are an intelligent router. Based on the user prompt, choose the most appropriate LLM:
-- "groq" for fast and reasoning answers
+- "groq" for fast and reasoning answers and high coding tasks
 - "cerebras" for general queries
-- "mistral" for coding tasks
-Just reply with one word: groq, cerebras, or mistral.
+
+Just reply with one word: groq,or cerebras
 Prompt: {input}
 """)
 
 data_routing_prompt = PromptTemplate.from_template("""
 You are an intelligent router. Based on the user prompt, choose the appropriate context:
-- vectordb
-- websearch
-- arxiv
-Just reply with one word.
+- wiki: for academic queries 
+- websearch: for other normal queries
+- arxiv: for academic papers and research
+- none: if no specific context is needed
+Just reply with one word.[wiki, websearch, arxiv,none].
 Prompt: {input}
 """)
 
@@ -197,9 +197,9 @@ def data_routing_node(state: State):
     data_choice = result.content.strip().lower() if hasattr(result, "content") else str(result).lower()
     print(f"[data_routing_node] Selected context: {data_choice}")
 
-    # Fallback to vectordb if unexpected
-    if data_choice not in ["vectordb", "websearch", "arxiv"]:
-        data_choice = "vectordb"
+    # Fallback to wiki if unexpected
+    if data_choice not in ["wiki", "websearch", "arxiv", "none"]:
+        data_choice = "wiki"
     
     state["data"] = data_choice
     
@@ -214,7 +214,7 @@ def routing_node(state: State):
     result = router_llm.invoke(routing_prompt.invoke({"input": text})).content.strip().lower()
     # Remove punctuation and whitespace
     result = re.sub(r'[^a-z]', '', result)
-    if result not in {"groq", "cerebras", "mistral"}:
+    if result not in {"groq", "cerebras"}:
         raise ValueError(f"Unknown llm_choice: {result}")
     state["llm_choice"] = result
     print(f"[routing_node] Selected LLM: {state['llm_choice']}")
@@ -241,7 +241,7 @@ def create_workflow():
    
     graph.add_node("llm1_node", llm1_node)
     graph.add_node("llm2_node", llm2_node)
-    graph.add_node("llm3_node", llm3_node)
+    
     
 
     graph.add_edge(START, "check_for_file_node")
@@ -257,14 +257,14 @@ def create_workflow():
         path_map={
             "groq": "llm2_node",
             "cerebras": "llm1_node",
-            "mistral": "llm3_node"
+            
         }
     )
 
     # LLM1/2/3 terminal
     graph.add_edge("llm1_node", END)
     graph.add_edge("llm2_node", END)
-    graph.add_edge("llm3_node", END)
+   
 
     # File check routing
     graph.add_conditional_edges(
@@ -342,11 +342,12 @@ def create_workflow():
     )
     graph.add_conditional_edges(
         "data_routing_node",
-        lambda state: state.get("data", "vectordb"),  # default to vectordb if missing
+        lambda state: state.get("data", "wiki"),  # default to wiki if missing
         path_map={
-            "vectordb": "vectordb_node",
+            "wiki": "wikipedia_reader_node",
             "websearch": "web_reader_tool_node",
-            "arxiv": "arxiv_reader_node"
+            "arxiv": "arxiv_reader_node",
+            "none":"final_prompt_node"  # No context needed, go directly to final prompt
         }
     )
     graph.add_conditional_edges(
