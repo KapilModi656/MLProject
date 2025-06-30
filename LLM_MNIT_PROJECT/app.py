@@ -6,15 +6,9 @@ graph = create_workflow()
 # Latex Fixer
 # ----------------------------
 def fix_latex_format(text: str) -> str:
-    # Replace [bmatrix] with {bmatrix}
-    text = text.replace(r'\begin[bmatrix]', r'\begin{bmatrix}')
-    text = text.replace(r'\end[bmatrix]', r'\end{bmatrix}')
-    # Ensure double backslashes for row breaks
-    text = re.sub(r'(?<!\\)\\(?!\\)', r'\\\\', text)
-    # Optionally, wrap in $$ if not already
-    if r'\begin{bmatrix}' in text and not text.strip().startswith('$$'):
-        text = f"$$\n{text.strip()}\n$$"
-    return text
+    if not isinstance(text, str):
+        text = str(text)
+    return re.sub(r"\[\s*(\\.+?)\s*\]", r"$$\1$$", text)
 
 # ----------------------------
 # Streamlit App UI
@@ -72,7 +66,7 @@ if prompt:
         assistant_msg = response_text.content if hasattr(response_text, "content") else str(response_text)
         st.session_state["messages"].append({"role": "assistant", "content": assistant_msg})
         with st.chat_message("assistant"):
-            st.markdown(fix_latex_format(assistant_msg), unsafe_allow_html=True)
+            st.markdown(assistant_msg, unsafe_allow_html=True)
 
             # Copy + Download options
    
