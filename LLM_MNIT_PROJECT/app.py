@@ -5,10 +5,16 @@ graph = create_workflow()
 # ----------------------------
 # Latex Fixer
 # ----------------------------
-def fix_latex_format(text: str) -> str:
-    if not isinstance(text, str):
-        text = str(text)
-    return re.sub(r"\[\s*(\\.+?)\s*\]", r"$$\1$$", text)
+def fix_matrix_latex(text: str) -> str:
+    # Replace [bmatrix] with {bmatrix}
+    text = text.replace(r'\begin[bmatrix]', r'\begin{bmatrix}')
+    text = text.replace(r'\end[bmatrix]', r'\end{bmatrix}')
+    # Ensure double backslashes for row breaks
+    text = re.sub(r'(?<!\\)\\(?!\\)', r'\\\\', text)
+    # Optionally, wrap in $$ if not already
+    if r'\begin{bmatrix}' in text and not text.strip().startswith('$$'):
+        text = f"$$\n{text.strip()}\n$$"
+    return text
 
 # ----------------------------
 # Streamlit App UI
