@@ -156,7 +156,7 @@ def final_prompt_node(state: State):
    - Matrices in LaTeX using `\\begin{{bmatrix}} ... \\end{{bmatrix}}` and wrap them in `$$...$$`.
    - Integrals, derivatives, and summations using display-style LaTeX blocks (also in `$$...$$`).
    - Ensure all expressions render cleanly in Streamlit or Markdown viewers.
-
+   - Use curly brackets or give response such that i can directly display it using markdown
 4. Keep the response helpful, humble, and clearly structured — ranging from 2 to 400 words, depending on complexity.
 
 5. When user uploads files or links (e.g., PDFs, papers, tutorials), extract and summarize core content or steps.
