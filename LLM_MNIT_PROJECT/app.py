@@ -83,10 +83,28 @@ if "messages" not in st.session_state:
 # Show Chat History
 # ----------------------------
 for msg in st.session_state["messages"]:
-    with st.chat_message(msg["role"],align="right" if msg["role"] == "user" else "left"):
-        msg_id = str(uuid.uuid4()).replace('-', '')
-        st.markdown(fix_latex_format(msg["content"]), unsafe_allow_html=True)
-        st.chat_message(msg["role"], key=msg_id)
+    with st.chat_message(msg["role"]):
+        content = fix_latex_format(msg["content"])
+        if msg["role"] == "user":
+            # Right-aligned user message
+            st.markdown(
+                f"""
+                <div style='text-align: right; background-color: #DCF8C6; padding: 10px 15px; border-radius: 12px; display: inline-block; max-width: 85%; margin-left: auto;'>
+                    {content}
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
+        else:
+            # Left-aligned assistant message
+            st.markdown(
+                f"""
+                <div style='text-align: left; background-color: #F1F0F0; padding: 10px 15px; border-radius: 12px; display: inline-block; max-width: 85%;'>
+                    {content}
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
 
 # ----------------------------
 # Chat Input
@@ -114,6 +132,13 @@ if prompt:
     if response_text:
         assistant_msg = response_text.content if hasattr(response_text, "content") else str(response_text)
         st.session_state["messages"].append({"role": "assistant", "content": assistant_msg})
-        with st.chat_message("assistant", align="left"):
-            st.markdown(fix_latex_format(assistant_msg), unsafe_allow_html=True)
+        with st.chat_message("assistant"):
+            st.markdown(
+                f"""
+                <div style='text-align: left; background-color: #F1F0F0; padding: 10px 15px; border-radius: 12px; display: inline-block; max-width: 85%;'>
+                    {fix_latex_format(assistant_msg)}
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
 
