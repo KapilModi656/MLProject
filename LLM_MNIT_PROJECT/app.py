@@ -17,7 +17,7 @@ def fix_latex_format(text: str) -> str:
         text = str(text)
     text = clean_custom_tags(text)
 
-    # Protect LaTeX blocks so we don't escape inside them
+    # Protect full LaTeX blocks
     def protect_latex_blocks(text):
         latex_blocks = []
         def repl(match):
@@ -33,9 +33,21 @@ def fix_latex_format(text: str) -> str:
             text = text.replace(f"__LATEX_BLOCK_{i}__", block)
         return text
 
+    # Protect LaTeX
     text, latex_blocks = protect_latex_blocks(text)
+
+    # Wrap matrix-style latex (A = \begin{bmatrix} ... \end{bmatrix}) in code block
+    def matrix_block(match):
+        return f"\n```latex\n{match.group(1)}\n```\n"
+    text = re.sub(r"\(([^()]*\\begin\{bmatrix\}.*?\\end\{bmatrix\}[^()]*)\)", matrix_block, text, flags=re.DOTALL)
+
+    # Escape standalone [ and ]
     text = text.replace('[', '\\[').replace(']', '\\]')
-    return restore_latex_blocks(text, latex_blocks)
+
+    # Restore protected latex blocks
+    text = restore_latex_blocks(text, latex_blocks)
+    return text
+
 
 # ----------------------------
 # App Config
@@ -105,6 +117,6 @@ if prompt:
         assistant_msg = response_text.content if hasattr(response_text, "content") else str(response_text)
         st.session_state["messages"].append({"role": "assistant", "content": assistant_msg})
         with st.chat_message("assistant"):
-            st.code(fix_latex_format(assistant_msg), language="markdown")
+            st.markdown(fix_latex_format(assistant_msg), unsafe_allow_html=True)
             with st.expander("📋 Copy", expanded=False):
                 st.code(assistant_msg, language="markdown")
