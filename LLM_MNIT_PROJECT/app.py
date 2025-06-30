@@ -13,53 +13,30 @@ def clean_custom_tags(text: str) -> str:
     return re.sub(r"</?think>", "", text)
 
 def fix_latex_format(text: str) -> str:
-    def detect_flat_matrix(text):
-        """
-        Detects space-separated numbers possibly forming a matrix
-        and converts to LaTeX bmatrix if the pattern matches.
-        """
-        def matrix_repl(match):
-            nums = match.group(0).strip().split()
-            n = len(nums)
-            if n < 4:
-                return match.group(0)  # too small for matrix
-            # try to guess number of columns (2, 3, 4, ...)
-            for col in [2, 3, 4, 5, 6]:
-                if n % col == 0:
-                    rows = [' & '.join(nums[i:i+col]) for i in range(0, n, col)]
-                    matrix = "\\begin{bmatrix}\n" + " \\\\\n".join(rows) + "\n\\end{bmatrix}"
-                    return f"$$\n{matrix}\n$$"
-            return match.group(0)  # fallback
-
-        return re.sub(r'(?<!\S)(-?\d+(\.\d+)?[\s,]+){3,}-?\d+(\.\d+)?(?!\S)', matrix_repl, text)
-
-    def wrap_latex_blocks(text):
-        # Wrap any raw \int, \frac, \sum, etc. in $$ if not already
-        patterns = [
-            r'\\int', r'\\sum', r'\\frac', r'\\lim', r'\\log', r'\\sqrt',
-            r'\\left', r'\\right', r'\\begin\{bmatrix\}', r'\\end\{bmatrix\}',
-            r'\\begin\{.*?\}', r'\\end\{.*?\}', r'\^', r'_', r'\\cdot', r'\\times', r'dx', r'dy'
-        ]
-        combined = '|'.join(patterns)
-        def wrap_math(match):
-            expr = match.group(0)
-            if not expr.startswith('$$'):
-                return f"$$ {expr.strip()} $$"
-            return expr
-        return re.sub(rf'(?<!\$)\s*({combined}.*?)(?=\s|$)', wrap_math, text)
-
-    def clean_custom_tags(text):
-        return re.sub(r'</?think>', '', text)
-
-    # Begin formatting
+    if not isinstance(text, str):
+        text = str(text)
     text = clean_custom_tags(text)
-    text = detect_flat_matrix(text)
-    text = wrap_latex_blocks(text)
 
-    # Escape stray square brackets if still left
+    # Convert flat 3x3 matrix rows into LaTeX matrix block
+    def detect_matrix_block(match):
+        nums = match.group(0).strip().split()
+        if len(nums) % 3 == 0:
+            rows = [' & '.join(nums[i:i+3]) for i in range(0, len(nums), 3)]
+            latex_matrix = "\\begin{bmatrix}\n" + ' \\\\\n'.join(rows) + "\n\\end{bmatrix}"
+            return f"\n$$\n{latex_matrix}\n$$\n"
+        return match.group(0)
+
+    # Match lines of digits that look like matrix rows
+    text = re.sub(r'(?:\d+[\s-]+)+\d+', detect_matrix_block, text)
+
+    # Make sure any \begin{bmatrix} blocks are wrapped in $$ if not already
+    text = re.sub(r'(?<!\$)\s*(\\begin\{bmatrix\}.*?\\end\{bmatrix\})\s*(?!\$)', r'$$\1$$', text, flags=re.DOTALL)
+
+    # Escape stray square brackets
     text = text.replace('[', '\\[').replace(']', '\\]')
 
     return text
+
 
 # ----------------------------
 # App Config
@@ -164,7 +141,7 @@ if prompt:
     # Show User Message
     st.session_state["messages"].append({"role": "user", "content": user_text})
     with st.chat_message("user"):
-        st.markdown('', unsafe_allow_html=False)
+        st.write('', unsafe_allow_html=False)
         cols = st.columns([0.15, 0.85])
         with cols[1]:
             st.markdown(
