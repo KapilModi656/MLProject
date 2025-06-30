@@ -2,13 +2,23 @@ import streamlit as st
 from workflow import create_workflow
 import re
 graph = create_workflow()
+
+
+def clean_custom_tags(text: str) -> str:
+    # Remove <think>...</think> and similar tags
+    return re.sub(r"</?think>", "", text)
 # ----------------------------
 # Latex Fixer
 # ----------------------------
 def fix_latex_format(text: str) -> str:
     if not isinstance(text, str):
         text = str(text)
-    return re.sub(r"\[\s*(\\.+?)\s*\]", r"$$\1$$", text)
+    # Remove <think> tags
+    text = clean_custom_tags(text)
+    # Optionally wrap LaTeX in $$
+    if "\\" in text and not text.strip().startswith("$$"):
+        text = f"$$\n{text.strip()}\n$$"
+    return text
 
 # ----------------------------
 # Streamlit App UI
@@ -66,7 +76,7 @@ if prompt:
         assistant_msg = response_text.content if hasattr(response_text, "content") else str(response_text)
         st.session_state["messages"].append({"role": "assistant", "content": assistant_msg})
         with st.chat_message("assistant"):
-            st.markdown(assistant_msg, unsafe_allow_html=True)
+            st.latex(fix_latex_format(assistant_msg), unsafe_allow_html=True)
 
             # Copy + Download options
    
