@@ -88,7 +88,7 @@ for msg in st.session_state["messages"]:
         if msg["role"] == "user":
             st.markdown(f'''
                 <div style="display: flex; justify-content: flex-end;">
-                    <div style="background: #DCF8C6; color: #222; padding: 10px 16px; border-radius: 16px; max-width: 80%; margin: 4px 0; text-align: right;">
+                    <div  text-align: right;">
                         {fix_latex_format(msg["content"])}
                     </div>
                 </div>
@@ -96,7 +96,7 @@ for msg in st.session_state["messages"]:
         else:
             st.markdown(f'''
                 <div style="display: flex; justify-content: flex-start;">
-                    <div style="background: #F1F0F0; color: #222; padding: 10px 16px; border-radius: 16px; max-width: 80%; margin: 4px 0; text-align: left;">
+                    <div style=" text-align: left;">
                         {fix_latex_format(msg["content"])}
                     </div>
                 </div>
