@@ -55,7 +55,7 @@ if "messages" not in st.session_state:
 # Display Chat History
 for msg in st.session_state["messages"]:
     with st.chat_message(msg["role"]):
-        st.markdown(fix_latex_format(msg["content"]), unsafe_allow_html=False)
+        st.markdown(auto_format_math(msg["content"]), unsafe_allow_html=True)
 
 # User Input
 prompt = st.chat_input(placeholder="Enter your question or upload a file:", accept_file="multiple")
@@ -68,7 +68,7 @@ if prompt:
     # Show User Message
     st.session_state["messages"].append({"role": "user", "content": user_text})
     with st.chat_message("user"):
-        st.markdown(auto_format_math(user_text), unsafe_allow_html=False)
+        st.markdown(auto_format_math(user_text), unsafe_allow_html=True)
 
     # Call Workflow
     with st.spinner("Processing your input..."):
@@ -81,4 +81,4 @@ if prompt:
         assistant_msg = response_text.content if hasattr(response_text, "content") else str(response_text)
         st.session_state["messages"].append({"role": "assistant", "content": assistant_msg})
         with st.chat_message("assistant"):
-            st.markdown(auto_format_math(assistant_msg), unsafe_allow_html=False)
+            st.markdown(auto_format_math(assistant_msg), unsafe_allow_html=True)
