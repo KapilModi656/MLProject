@@ -145,7 +145,7 @@ def final_prompt_node(state: State):
 
     context = "\n\n".join(context_parts).strip()
     text = state["user_input"].get("text", "") if isinstance(state["user_input"], dict) else state["user_input"]
-    state["final_prompt"] = f"""
+    final_prompt = r"""
     System: You are MNITGPT, an intelligent academic assistant developed by Kapil Modi for students, researchers, and professors at MNIT. Your primary role is to:
 
 1. Provide simplified yet technically accurate explanations of academic topics, tutorial problems, and research papers using data from a curated vector database.
@@ -180,6 +180,10 @@ Context: {context}
 User Input: {text}
 
 """
+    state["final_prompt"] = final_prompt.format(
+        context=context,
+        text=text
+    )
 
     print(f"[final_prompt_node] docs: {len(combined_docs)}, wiki_response: {bool(state.get('wiki_response'))}, web_response: {bool(state.get('web_response'))}, context: {bool(state.get('context'))}")
     print(f"[final_prompt_node] final_prompt set? {state['final_prompt'][:50]}")
