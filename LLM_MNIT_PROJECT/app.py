@@ -37,7 +37,6 @@ def fix_latex_format(text: str) -> str:
 
     return text
 
-
 # ----------------------------
 # App Config
 # ----------------------------
