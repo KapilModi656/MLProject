@@ -86,10 +86,10 @@ for msg in st.session_state["messages"]:
     with st.chat_message(msg["role"]):
         content = fix_latex_format(msg["content"])
         if msg["role"] == "user":
-            st.write('', unsafe_allow_html=False)
+            st.markdown('', unsafe_allow_html=True)
             cols = st.columns([0.15, 0.85])
             with cols[1]:
-                st.write(
+                st.markdown(
                     f"""
                     <div style='background: linear-gradient(90deg, var(--user-bubble-bg, #388e3c) 80%, #43a047 100%); color: var(--user-bubble-fg, #fff); padding: 12px 18px; border-radius: 18px 18px 4px 18px; max-width: 100%; word-break: break-word; text-align: right; box-shadow: 0 2px 8px rgba(34,139,34,0.08); font-size: 1.08em;'>
                         {content}
@@ -97,10 +97,11 @@ for msg in st.session_state["messages"]:
                     """,
                     unsafe_allow_html=True
                 )
+            
         else:
             cols = st.columns([0.85, 0.15])
             with cols[0]:
-                st.write(
+                st.markdown(
                     f"""
                     <div style='background: linear-gradient(90deg, var(--assistant-bubble-bg, #23272f) 80%, #31363f 100%); color: var(--assistant-bubble-fg, #fff); padding: 12px 18px; border-radius: 18px 18px 18px 4px; max-width: 100%; word-break: break-word; text-align: left; box-shadow: 0 2px 8px rgba(0,0,0,0.10); font-size: 1.08em;'>
                         {content}
@@ -154,7 +155,7 @@ if prompt:
         st.write('', unsafe_allow_html=False)
         cols = st.columns([0.15, 0.85])
         with cols[1]:
-            st.write(
+            st.markdown(
                 f"""
                 <div style='background: linear-gradient(90deg, var(--user-bubble-bg, #388e3c) 80%, #43a047 100%); color: var(--user-bubble-fg, #fff); padding: 12px 18px; border-radius: 18px 18px 4px 18px; max-width: 100%; word-break: break-word; text-align: right; box-shadow: 0 2px 8px rgba(34,139,34,0.08); font-size: 1.08em;'>
                     {fix_latex_format(user_text)}
@@ -177,7 +178,7 @@ if prompt:
         with st.chat_message("assistant"):
             cols = st.columns([0.85, 0.15])
             with cols[0]:
-                st.write(
+                st.markdown(
                     f"""
                     <div style='background: linear-gradient(90deg, var(--assistant-bubble-bg, #23272f) 80%, #31363f 100%); color: var(--assistant-bubble-fg, #fff); padding: 12px 18px; border-radius: 18px 18px 18px 4px; max-width: 100%; word-break: break-word; text-align: left; box-shadow: 0 2px 8px rgba(0,0,0,0.10); font-size: 1.08em;'>
                         {fix_latex_format(assistant_msg)}
