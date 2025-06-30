@@ -10,18 +10,21 @@ def auto_format_math(text: str) -> str:
     if not isinstance(text, str):
         text = str(text)
 
-    # 1. Clean unwanted tags like <think>
+    # 1. Remove <think> tags
     text = re.sub(r"</?think>", "", text)
 
-    # 2. Convert [ \LaTeX ] → $$ \LaTeX $$
+    # 2. Convert [ \LaTeX ] and ( \LaTeX ) to proper math blocks
     text = re.sub(r"\[\s*(\\[^\[\]]+?)\s*\]", r"$$\1$$", text)
+    text = re.sub(r"\(\s*(\\boxed{[^()]+}|\\[^\(\)]+?)\s*\)", r"$$\1$$", text)
 
-    # 3. Auto format matrix rows like: Row 1: 2 1 -2
-    def format_matrix_rows(match):
-        row_label = match.group(1)
-        row_values = match.group(2)
-        return f"\n```\n{row_label}: {row_values}\n```\n"
-    text = re.sub(r"(Row\s*\d+):\s*([-\d.\s]+)", format_matrix_rows, text)
+    # 3. Format numbered sections (e.g., "1. Title")
+    text = re.sub(r"(?m)^(\d+)\.\s+(.*)", r"### \1. \2", text)
+
+    # 4. Add code blocks for aligned rows like: "Row 1: 2 1 -2"
+    text = re.sub(r"(Row\s*\d+:.*?)$", r"```\n\1\n```", text, flags=re.MULTILINE)
+
+    # 5. Fix LaTeX spacing (multiple \\ in a matrix)
+    text = text.replace(" \\ ", r" \\ ")
 
     return text
 
