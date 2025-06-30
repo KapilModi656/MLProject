@@ -61,9 +61,9 @@ if "groq_api_key" not in st.session_state:
     st.session_state["groq_api_key"] = ""
 
 with st.sidebar:
-    st.markdown("### 🔑 Groq API Key")
+    st.markdown("### 🔑 Groq API Key(Optional)")
     groq_key = st.text_input(
-        "Enter Groq API Key:",
+        "Enter Groq API Key(Optional):",
         value=st.session_state["groq_api_key"],
         type="password"
     )
