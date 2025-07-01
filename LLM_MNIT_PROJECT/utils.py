@@ -17,11 +17,7 @@ from youtube_transcript_api import YouTubeTranscriptApi, TranscriptsDisabled, No
 import os
 from dotenv import load_dotenv
 import json
-
-from langchain.schema import Document
-import yt_dlp
-import requests
-import webvtt
+from pytube import YouTube
 load_dotenv()
 def has_url(prompt):
     url_pattern = r'https?://\S+'
@@ -118,58 +114,17 @@ def type_url(urls):
         else:
             urlty["web"].append(url)
     return urlty
-def youtube_reader(url: str) -> list[Document]:
+def youtube_reader(url: str):
     try:
-        # Step 1: Extract subtitle (caption) URL
-        ydl_opts = {
-            'quiet': True,
-            'skip_download': True,
-            'writesubtitles': True,
-            'writeautomaticsub': True,
-            'subtitlesformat': 'json',
-        }
+        # Extract video ID from URL
+        yt= YouTube(url)
+        metadata = f"Title: {yt.title}\nDescription: {yt.description}\nChannel: {yt.author}\nThumbnail: {yt.thumbnail_url}"
 
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(url, download=False)
-            subtitles = info.get('subtitles') or info.get('automatic_captions')
-
-            if not subtitles:
-                return [Document(page_content="⚠️ No subtitles found.", metadata={"url": url})]
-
-            # Prefer English if available
-            lang = "en" if "en" in subtitles else list(subtitles.keys())[0]
-            transcript_url = subtitles[lang][0]['url']
-
-            # Step 2: Download and parse the .vtt transcript
-            response = requests.get(transcript_url)
-            vtt_text = response.text
-
-            # Save temporarily to parse with webvtt
-            with tempfile.NamedTemporaryFile(mode='w+', suffix='.vtt', delete=False) as f:
-                f.write(vtt_text)
-                temp_path = f.name
-
-            captions = []
-            for caption in webvtt.read(temp_path):
-                captions.append(caption.text.strip())
-
-            os.remove(temp_path)
-
-            full_transcript = "\n".join(captions)
-
-            # Step 3: Return LangChain Document
-            return [Document(
-                page_content=full_transcript,
-                metadata={
-                    "source": "YouTube",
-                    "title": info.get("title", ""),
-                    "author": info.get("uploader", ""),
-                    "url": url
-                }
-            )]
-
+        return metadata
+    except (VideoUnavailable, TranscriptsDisabled, NoTranscriptFound) as e:
+        return [f"Transcript error for {url}: {str(e)}"]
     except Exception as e:
-        return [Document(page_content=f"⚠️ Error: {str(e)}", metadata={"url": url})]
+        return [f"Proxy/Network error for {url}: {str(e)}"]
 def web_reader(url):
     from langchain_community.document_loaders import UnstructuredURLLoader
     loader = UnstructuredURLLoader(urls=[url])
