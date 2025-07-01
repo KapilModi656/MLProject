@@ -128,12 +128,12 @@ def youtube_reader(url: str):
         with YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=False)
          metadata = f"""Title: {info.get('title')}
-Uploader: {info.get('uploader')}
-Upload Date: {info.get('upload_date')}
-Duration: {info.get('duration')} seconds
-View Count: {info.get('view_count')}
-Description: {info.get('description')}
-"""
+                    Uploader: {info.get('uploader')}
+                    Upload Date: {info.get('upload_date')}
+                    Duration: {info.get('duration')} seconds
+                    View Count: {info.get('view_count')}
+                    Description: {info.get('description')}
+                    """
         # Create a Document list with one document containing the metadata
         docs = [Document(page_content=metadata, metadata={"source": url})]
         return docs
