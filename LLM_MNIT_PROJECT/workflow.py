@@ -162,7 +162,7 @@ Your core responsibilities are:
 3. **Use Markdown-compatible formatting**, with:
    - Bullet points, bold text, and headers for clarity.
    - Math typeset using LaTeX: `$...$` for inline math, `$$...$$` for display math.
-   - Use `\\begin{bmatrix} ... \\end{bmatrix}` for matrices and wrap in `$$`.
+   - Use `\\begin{bmatrix} ... \\end{{bmatrix}}` for matrices and wrap in `$$`.
    - For integrals, derivatives, summations, and equations, always use `$$...$$` for full visibility.
    - Output text such that it renders cleanly in Markdown or Streamlit.
 
