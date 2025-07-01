@@ -84,7 +84,7 @@ if "messages" not in st.session_state:
 # ----------------------------
 for msg in st.session_state["messages"]:
     with st.chat_message(msg["role"]):
-        content = fix_latex_format(msg["content"])
+        content = msg["content"]
         if msg["role"] == "user":
             st.markdown('', unsafe_allow_html=True)
             cols = st.columns([0.15, 0.85])
@@ -161,7 +161,7 @@ if prompt:
             st.markdown(
                 f"""
                 <div style='background: linear-gradient(90deg, var(--user-bubble-bg, #388e3c) 80%, #43a047 100%); color: var(--user-bubble-fg, #fff); padding: 12px 18px; border-radius: 18px 18px 4px 18px; max-width: 100%; word-break: break-word; text-align: right; box-shadow: 0 2px 8px rgba(34,139,34,0.08); font-size: 1.08em;'>
-                    {fix_latex_format(user_text)}
+                    {user_text}
                 </div>
                 """,
                 unsafe_allow_html=True
