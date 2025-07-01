@@ -115,7 +115,7 @@ def type_url(urls):
         else:
             urlty["web"].append(url)
     return urlty
-def youtube_metadata(url: str):
+def youtube_reader(url: str):
     ydl_opts = {
         'quiet': True,
         'skip_download': True,
