@@ -289,7 +289,37 @@ and remember if the topic is about tutorial or pyq send wiki
 Just reply with one word.[wiki, websearch, arxiv,none].
 Prompt: {input}
 """)
-
+use_docs_prompt= PromptTemplate.from_template("""
+You are an intelligent router. Based on the user prompt, choose whether it is related to document that uploaded or not:
+- "yes" if the user is asking about the uploaded document or in a context of it
+- "no" if the user is not asking about the uploaded document
+                                              
+give one word answer only.["yes", "no"].
+docs:{docs}
+Prompt: {input}
+                                              
+                                              """)
+def use_docs_node(state: State):
+    text = state["user_input"].get("text", "")
+    combined_docs=state.get(["docs",""])
+    context_parts = []
+    if combined_docs:
+        context_parts.append("\n".join(
+            doc.page_content if hasattr(doc, "page_content") else str(doc)
+            for doc in combined_docs
+        ))
+    summary_doc=theory_summarizer(context="\n\n".join(context_parts).strip())
+    result = router_llm.invoke(use_docs_prompt.invoke({"input": text, "docs": summary_doc}))
+    use_docs_choice = result.content.strip().lower() if hasattr(result, "content") else str(result).lower()
+    
+    if use_docs_choice == "yes":
+        state["use_docs"] = True
+    elif use_docs_choice == "no":
+        state["use_docs"] = False
+    else:
+        raise ValueError(f"Unexpected use_docs_choice: {use_docs_choice}")
+    
+    return state
 def syllabus_node(state: State):
     text = state["user_input"].get("text", "")
     result = router_llm.invoke(syllabus_prompt.invoke({"input": text}))
@@ -364,11 +394,21 @@ def create_workflow():
     graph.add_node("pyq", pyq)
     graph.add_node("llm1_node", llm1_node)
     graph.add_node("llm2_node", llm2_node)
+    graph.add_node("use_docs_node", use_docs_node)
     
     
 
     graph.add_edge(START, "check_for_file_node")
-   
+  
+    graph.add_edge("file_converter_node", "use_docs_node")
+    graph.add_conditional_edges(
+        "use_docs_node",
+        lambda state: "yes" if state.get("use_docs", False) else "no",
+        path_map={
+            "yes": "prompt_doc_merger_node",
+            "no": "check_for_urls_node"
+        }
+    )
     graph.add_edge("prompt_doc_merger_node", "routing_node")
     graph.add_edge("final_prompt_node", "routing_node")
     
@@ -398,7 +438,7 @@ def create_workflow():
             "False": "check_for_urls_node"
         }
     )
-    graph.add_edge("FileConverter", "prompt_doc_merger_node")
+
     graph.add_edge("prompt_doc_merger_node", "routing_node")
 
     # URL presence
