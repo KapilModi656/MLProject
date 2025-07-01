@@ -72,7 +72,7 @@ def FileConverter(state: State):
 
 def prompt_doc_merger_node(state: State):
     text = state["user_input"].get("text", "")
-    state["merged_prompt"] =doc_prompt_merger(text, state.get("docs", []) if state.get("docs") else text)
+    state["merged_prompt"] = theory_summarizer(doc_prompt_merger(text, state.get("docs", []) if state.get("docs") else text))
     print("prompt_doc_merger_node:working fine")
 
     return state
