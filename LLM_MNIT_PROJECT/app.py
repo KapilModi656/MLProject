@@ -147,8 +147,7 @@ prompt = st.chat_input(placeholder="Ask about tutorials, research, or upload fil
 if prompt:
     user_text = prompt.text if hasattr(prompt, 'text') else str(prompt)
     user_files = prompt.files if hasattr(prompt, 'files') else []
-    if user_files and not isinstance(user_files, list):
-        
+    if user_files:
         st.session_state["file"] = user_files
 
     user_input = {"text": user_text, "files": st.session_state.get("file", [])}
