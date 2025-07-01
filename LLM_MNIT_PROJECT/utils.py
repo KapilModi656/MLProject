@@ -117,7 +117,7 @@ def theory_summarizer(context: str):
         str: Summary text.
     """
     # Initialize LLM (you can customize temperature, model, etc.)
-    llm = ChatCerebras(api_key=os.getenv("CEREBRAS_API_KEY"), temperature=0)
+    llm = ChatCerebras(model="llama-4-scout-17b-16e-instruct", api_key=os.getenv("CEREBRAS_API_KEY"),temperature=0.2)
 
     # Split the context into chunks for map_reduce
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
