@@ -50,7 +50,7 @@ class State(TypedDict):
     retriever_syllabus:RunnableLambda
     retriever_tutorial:RunnableLambda
     retriever_pyq:RunnableLambda
-    use_docs: str
+    use_docs: bool
 
 
 syllabus_path=os.getcwd() + "/LLM_MNIT_PROJECT/1stSem/syllabus"
@@ -296,12 +296,12 @@ You are an intelligent router. Based on the user prompt, choose whether it is re
 - "no" if the user is not asking about the uploaded document
                                             
 give one word answer only.["yes", "no"].
-docs:{docs}
+docs:{context}
 Prompt: {input}
                                               """)
 def use_docs_node(state: State):
     text = state["user_input"].get("text", "")
-    combined_docs=state.get(["docs",""])
+    combined_docs=state.get(["docs"])
     context_parts = []
     if combined_docs:
         context_parts.append("\n".join(
@@ -309,13 +309,13 @@ def use_docs_node(state: State):
             for doc in combined_docs
         ))
     summary_doc=theory_summarizer(context="\n\n".join(context_parts).strip())
-    result = router_llm.invoke(use_docs_prompt.invoke({"input": text, "docs": summary_doc}))
+    result = router_llm.invoke(use_docs_prompt.invoke({"input": text, "context": summary_doc}))
     use_docs_choice = result.content.strip().lower() if hasattr(result, "content") else str(result).lower()
     
     if use_docs_choice == "yes":
-        state["use_docs"] = "True"
+        state["use_docs"] = True
     elif use_docs_choice == "no":
-        state["use_docs"] = "False"
+        state["use_docs"] = False
     else:
         raise ValueError(f"Unexpected use_docs_choice: {use_docs_choice}")
     
@@ -552,4 +552,8 @@ def create_workflow():
     )
 
     return graph.compile()
+
+graph= create_workflow()
+with open("graph.png", "wb") as f:
+    f.write(graph.get_graph().draw_mermaid_png())  # Save the graph as a PNG file
 
