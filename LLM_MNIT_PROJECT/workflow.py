@@ -400,7 +400,7 @@ def create_workflow():
 
     graph.add_edge(START, "check_for_file_node")
   
-    graph.add_edge("file_converter_node", "use_docs_node")
+    graph.add_edge("FileConverter", "use_docs_node")
     graph.add_conditional_edges(
         "use_docs_node",
         lambda state: "yes" if state.get("use_docs", False) else "no",
