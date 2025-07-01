@@ -50,6 +50,7 @@ class State(TypedDict):
     retriever_syllabus:RunnableLambda
     retriever_tutorial:RunnableLambda
     retriever_pyq:RunnableLambda
+    use_docs: str
 
 
 syllabus_path=os.getcwd() + "/LLM_MNIT_PROJECT/1stSem/syllabus"
@@ -293,11 +294,10 @@ use_docs_prompt= PromptTemplate.from_template("""
 You are an intelligent router. Based on the user prompt, choose whether it is related to document that uploaded or not:
 - "yes" if the user is asking about the uploaded document or in a context of it or he says explain me this or input is blank or says explain me this pdf,ppt,docs etc
 - "no" if the user is not asking about the uploaded document
-                                              
+                                            
 give one word answer only.["yes", "no"].
 docs:{docs}
 Prompt: {input}
-                                              
                                               """)
 def use_docs_node(state: State):
     text = state["user_input"].get("text", "")
