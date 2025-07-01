@@ -21,6 +21,7 @@ from pytube import YouTube
 from yt_dlp import YoutubeDL
 from langchain.schema import Document
 from langchain_cerebras import ChatCerebras
+import time
 load_dotenv()
 def has_url(prompt):
     url_pattern = r'https?://\S+'
@@ -120,17 +121,29 @@ def theory_summarizer(context: str):
     llm = ChatCerebras(model="llama-4-scout-17b-16e-instruct", api_key=os.getenv("CEREBRAS_API_KEY"),temperature=0.2)
 
     # Split the context into chunks for map_reduce
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=4000, chunk_overlap=100)
     texts = text_splitter.split_text(context)
     
-    # Convert chunks into Document objects
     docs = [Document(page_content=t) for t in texts]
+    sleep_seconds=5
+    # Map step: summarize each chunk separately, with sleep in between
+    chunk_summaries = []
+    for i, doc in enumerate(docs):
+        prompt = f"Summarize the following text concisely:\n\n{doc.page_content}"
+        summary = llm.predict(prompt)
+        chunk_summaries.append(summary)
+        print(f"Summarized chunk {i+1}/{len(docs)}")
+        
+        # Sleep to avoid rate limits
+        if i < len(docs) - 1:
+            time.sleep(sleep_seconds)
     
-    # Load summarization chain with map_reduce method
-    summarize_chain = load_summarize_chain(llm, chain_type="map_reduce")
+    # Reduce step: summarize all chunk summaries into one final summary
+    combined_text = "\n\n".join(chunk_summaries)
+    final_prompt = f"Summarize the following summaries into one concise summary:\n\n{combined_text}"
+    final_summary = llm.predict(final_prompt)
     
-    # Run summarization chain on docs
-    summary = summarize_chain.run(docs)
+    return final_summary
     
     return summary
 def type_url(urls):
