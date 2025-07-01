@@ -151,7 +151,7 @@ if prompt:
         
         st.session_state["file"] = user_files
 
-    user_input = {"text": user_text, "files": st.session_state["file"]}
+    user_input = {"text": user_text, "files": st.session_state.get("file", [])}
 
     # Show User Message
     st.session_state["messages"].append({"role": "user", "content": user_text})
