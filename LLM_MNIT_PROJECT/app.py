@@ -176,7 +176,7 @@ if prompt:
             "retriever_tutorial": st.session_state["retriever_tutorial"],
             "retriever_pyq": st.session_state["retriever_pyq"]
         })
-        response_text = result.get("response") if isinstance(result, dict) else None
+        response_text = result.get("final_response") if isinstance(result, dict) else None
 
     if response_text:
         assistant_msg = response_text.content if hasattr(response_text, "content") else str(response_text)
