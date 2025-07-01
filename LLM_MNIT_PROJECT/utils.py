@@ -19,6 +19,7 @@ from dotenv import load_dotenv
 import json
 from pytube import YouTube
 from yt_dlp import YoutubeDL
+from langchain.schema import Document
 load_dotenv()
 def has_url(prompt):
     url_pattern = r'https?://\S+'
@@ -126,13 +127,16 @@ def youtube_reader(url: str):
     try:
         with YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=False)
-        metadata = f"Title: {info.get('title')}\n" \
-                   f"Uploader: {info.get('uploader')}\n" \
-                   f"Upload Date: {info.get('upload_date')}\n" \
-                   f"Duration: {info.get('duration')} seconds\n" \
-                   f"View Count: {info.get('view_count')}\n" \
-                   f"Description: {info.get('description')}"
-        return metadata
+         metadata = f"""Title: {info.get('title')}
+Uploader: {info.get('uploader')}
+Upload Date: {info.get('upload_date')}
+Duration: {info.get('duration')} seconds
+View Count: {info.get('view_count')}
+Description: {info.get('description')}
+"""
+        # Create a Document list with one document containing the metadata
+        docs = [Document(page_content=metadata, metadata={"source": url})]
+        return docs
     except Exception as e:
         return f"Error fetching metadata: {str(e)}"
     except (VideoUnavailable, TranscriptsDisabled, NoTranscriptFound) as e:
