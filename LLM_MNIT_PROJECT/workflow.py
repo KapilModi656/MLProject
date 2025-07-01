@@ -445,7 +445,7 @@ def create_workflow():
     # LLM1/2/3 terminal
     graph.add_edge("llm1_node", "llm3_node")
     graph.add_edge("llm2_node","llm3_node")
-    graph.add_edge("llm3_node", "END")
+    graph.add_edge("llm3_node", END)
 
     # File check routing
     graph.add_conditional_edges(
