@@ -2,7 +2,8 @@ from langgraph.graph import StateGraph, START, END
 from typing_extensions import TypedDict
 from utils import (
     has_url, find_urls, is_file, docreader, doc_prompt_merger, type_url,
-    youtube_reader, web_reader, wikipedia_tool, arxiv_tool, web_tool, save_uploaded_file, make_retreiver
+    youtube_reader, web_reader, wikipedia_tool, arxiv_tool, web_tool, save_uploaded_file, make_retreiver,
+    theory_summarizer
 )
 import os
 from dotenv import load_dotenv
@@ -70,8 +71,9 @@ def FileConverter(state: State):
 
 def prompt_doc_merger_node(state: State):
     text = state["user_input"].get("text", "")
-    state["merged_prompt"] = doc_prompt_merger(text, state.get("docs", [])) if state.get("docs") else text
+    state["merged_prompt"] = theory_summarizer(doc_prompt_merger(text, state.get("docs", [])) if state.get("docs") else text)
     print("prompt_doc_merger_node:working fine")
+
     return state
 
 def check_for_urls_node(state: State):
@@ -144,6 +146,7 @@ def final_prompt_node(state: State):
             context_parts.append(val)
 
     context = "\n\n".join(context_parts).strip()
+    context=theory_summarizer(context=context)
     text = state["user_input"].get("text", "") if isinstance(state["user_input"], dict) else state["user_input"]
     final_prompt = r"""
     System: You are MNITGPT, an intelligent academic assistant developed by Kapil Modi for students, researchers, and professors at MNIT. Your primary role is to:
@@ -162,7 +165,8 @@ def final_prompt_node(state: State):
 5. When user uploads files or links (e.g., PDFs, papers, tutorials), extract and summarize core content or steps.
 
 6. Never assume or hallucinate data beyond the provided context or the trusted vector database. If unsure, politely say so.
-
+7. You would get summarized context from the theory_summarizer function and use it in your response.
+8. dont give your intrusive thought in output only give direct answer to the user whether maths tutorial or pyq
 Always maintain this identity and formatting standard.
 
 ---

@@ -20,6 +20,7 @@ import json
 from pytube import YouTube
 from yt_dlp import YoutubeDL
 from langchain.schema import Document
+from langchain_cerebras import ChatCerebras
 load_dotenv()
 def has_url(prompt):
     url_pattern = r'https?://\S+'
@@ -103,7 +104,35 @@ def doc_prompt_merger(prompt, doc):
         return f"{prompt}\n\nDocument:\n{doc}"
 
     raise ValueError("Document must be a string or a list of Document objects or strings.")
+def theory_summarizer(context: str):
+    from langchain.chains.summarize import load_summarize_chain
+    """
+    Summarize the given context using LangChain's map_reduce summarization chain.
+    
+    Args:
+        context (str): Large text to summarize.
+        openai_api_key (str): OpenAI API key for LLM access.
+    
+    Returns:
+        str: Summary text.
+    """
+    # Initialize LLM (you can customize temperature, model, etc.)
+    llm = ChatCerebras(api_key=os.getenv("CEREBRAS_API_KEY"), temperature=0)
 
+    # Split the context into chunks for map_reduce
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
+    texts = text_splitter.split_text(context)
+    
+    # Convert chunks into Document objects
+    docs = [Document(page_content=t) for t in texts]
+    
+    # Load summarization chain with map_reduce method
+    summarize_chain = load_summarize_chain(llm, chain_type="map_reduce")
+    
+    # Run summarization chain on docs
+    summary = summarize_chain.run(docs)
+    
+    return summary
 def type_url(urls):
     urlty={"youtube": [], "arxiv": [], "web": []}
     for url in urls:
