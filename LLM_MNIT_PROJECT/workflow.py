@@ -308,7 +308,7 @@ def use_docs_node(state: State):
             doc.page_content if hasattr(doc, "page_content") else str(doc)
             for doc in combined_docs
         ))
-    summary_doc="\n\n".join(context_parts).strip()
+    summary_doc=theory_summarizer(context="\n\n".join(context_parts).strip())
     result = router_llm.invoke(use_docs_prompt.invoke({"input": text, "context": summary_doc}))
     use_docs_choice = result.content.strip().lower() if hasattr(result, "content") else str(result).lower()
     
