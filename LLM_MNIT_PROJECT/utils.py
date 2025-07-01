@@ -18,6 +18,7 @@ import os
 from dotenv import load_dotenv
 import json
 from pytube import YouTube
+from yt_dlp import YoutubeDL
 load_dotenv()
 def has_url(prompt):
     url_pattern = r'https?://\S+'
@@ -114,13 +115,26 @@ def type_url(urls):
         else:
             urlty["web"].append(url)
     return urlty
-def youtube_reader(url: str):
+def youtube_metadata(url: str):
+    ydl_opts = {
+        'quiet': True,
+        'skip_download': True,
+        'extract_flat': True,
+        'no_warnings': True,
+        'forceurl': True,
+    }
     try:
-        # Extract video ID from URL
-        yt= YouTube(url)
-        metadata = f"Title: {yt.title}\nDescription: {yt.description}\nChannel: {yt.author}\nThumbnail: {yt.thumbnail_url}"
-
+        with YoutubeDL(ydl_opts) as ydl:
+            info = ydl.extract_info(url, download=False)
+        metadata = f"Title: {info.get('title')}\n" \
+                   f"Uploader: {info.get('uploader')}\n" \
+                   f"Upload Date: {info.get('upload_date')}\n" \
+                   f"Duration: {info.get('duration')} seconds\n" \
+                   f"View Count: {info.get('view_count')}\n" \
+                   f"Description: {info.get('description')}"
         return metadata
+    except Exception as e:
+        return f"Error fetching metadata: {str(e)}"
     except (VideoUnavailable, TranscriptsDisabled, NoTranscriptFound) as e:
         return [f"Transcript error for {url}: {str(e)}"]
     except Exception as e:
