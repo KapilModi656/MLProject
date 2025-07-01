@@ -15,6 +15,8 @@ if "retriever_tutorial" not in st.session_state:
     st.session_state["retriever_tutorial"] = make_retreiver(tutorial_path)
 if "retriever_pyq" not in st.session_state:
     st.session_state["retriever_pyq"] = make_retreiver(pyq_path)
+if "file" not in st.session_state:
+    st.session_state["file"] = []
 # ----------------------------
 # Utilities
 # ----------------------------
@@ -147,8 +149,7 @@ if prompt:
     user_files = prompt.files if hasattr(prompt, 'files') else []
     if user_files and not isinstance(user_files, list):
         user_files = [user_files]
-        if "file" not in st.session_state:
-            st.session_state["file"] = []
+        
         st.session_state["file"] = user_files
 
     user_input = {"text": user_text, "files": st.session_state["file"]}
