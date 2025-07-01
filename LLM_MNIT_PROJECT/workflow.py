@@ -313,9 +313,9 @@ def use_docs_node(state: State):
     use_docs_choice = result.content.strip().lower() if hasattr(result, "content") else str(result).lower()
     
     if use_docs_choice == "yes":
-        state["use_docs"] = True
+        state["use_docs"] = "True"
     elif use_docs_choice == "no":
-        state["use_docs"] = False
+        state["use_docs"] = "False"
     else:
         raise ValueError(f"Unexpected use_docs_choice: {use_docs_choice}")
     
