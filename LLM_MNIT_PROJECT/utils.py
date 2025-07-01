@@ -17,6 +17,7 @@ from youtube_transcript_api import YouTubeTranscriptApi, TranscriptsDisabled, No
 import os
 from dotenv import load_dotenv
 import json
+from pytube import YouTube
 load_dotenv()
 def has_url(prompt):
     url_pattern = r'https?://\S+'
@@ -116,22 +117,10 @@ def type_url(urls):
 def youtube_reader(url: str):
     try:
         # Extract video ID from URL
-        video_id = url.split("v=")[-1].split("&")[0]
+        yt= YouTube(url)
+        metadata = f"Title: {yt.title}\nDescription: {yt.description}\nChannel: {yt.author}\nThumbnail: {yt.thumbnail_url}"
 
-        # Override internal proxy config (hacky but works)
-        from youtube_transcript_api._api import _TranscriptApi
-        _TranscriptApi._TranscriptApi__proxy_config = PROXIES  # override private proxy config
-
-        # Test API call (optional but safe)
-        _ = YouTubeTranscriptApi.list_transcripts(video_id)
-
-        # Now use LangChain loader
-        loader = YoutubeLoader.from_youtube_url(url, language=["en", "en-IN", "hi"])
-        docs = loader.load()
-
-        splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
-        return splitter.split_documents(docs)
-
+        return metadata
     except (VideoUnavailable, TranscriptsDisabled, NoTranscriptFound) as e:
         return [f"Transcript error for {url}: {str(e)}"]
     except Exception as e:

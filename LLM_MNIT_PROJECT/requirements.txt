@@ -26,3 +26,4 @@ youtube_transcript-api
 streamlit-authenticator
 faiss-cpu
 rank_bm25
+pytube
