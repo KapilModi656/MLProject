@@ -246,7 +246,7 @@ def llm1_node(state: State):
     return state
 def llm3_node(state: State):
     llm3 = ChatCerebras(model="llama-4-scout-17b-16e-instruct", api_key=os.getenv("CEREBRAS_API_KEY"))
-    prompt = state.get("response")
+    prompt = state.get("response").content
     text= state["user_input"].get("text", "") 
     prompt1="""
 System: You are MNITGPT, an intelligent academic assistant developed by Kapil Modi for students, researchers, and professors at MNIT. Your primary role is to:
