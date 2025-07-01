@@ -127,22 +127,18 @@ def youtube_reader(url: str):
     try:
         with YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=False)
-         metadata = f"""Title: {info.get('title')}
-                    Uploader: {info.get('uploader')}
-                    Upload Date: {info.get('upload_date')}
-                    Duration: {info.get('duration')} seconds
-                    View Count: {info.get('view_count')}
-                    Description: {info.get('description')}
-                    """
-        # Create a Document list with one document containing the metadata
+        metadata = f"""Title: {info.get('title')}
+Uploader: {info.get('uploader')}
+Upload Date: {info.get('upload_date')}
+Duration: {info.get('duration')} seconds
+View Count: {info.get('view_count')}
+Description: {info.get('description')}
+"""
         docs = [Document(page_content=metadata, metadata={"source": url})]
         return docs
     except Exception as e:
-        return f"Error fetching metadata: {str(e)}"
-    except (VideoUnavailable, TranscriptsDisabled, NoTranscriptFound) as e:
-        return [f"Transcript error for {url}: {str(e)}"]
-    except Exception as e:
-        return [f"Proxy/Network error for {url}: {str(e)}"]
+        error_doc = Document(page_content=f"Error fetching metadata: {str(e)}", metadata={"source": url})
+        return [error_doc]
 def web_reader(url):
     from langchain_community.document_loaders import UnstructuredURLLoader
     loader = UnstructuredURLLoader(urls=[url])
