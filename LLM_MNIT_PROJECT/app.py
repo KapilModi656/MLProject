@@ -4,19 +4,23 @@ import re
 import uuid
 from utils import make_retreiver
 import os
+from datetime import timedelta
 graph = create_workflow()
 
 syllabus_path=os.getcwd() + "/LLM_MNIT_PROJECT/1stSem/syllabus"
 tutorial_path= os.getcwd() + "/LLM_MNIT_PROJECT/1stSem/tutorials"
 pyq_path= os.getcwd() + "/LLM_MNIT_PROJECT/1stSem/pyq"
-if "retriever_syllabus" not in st.session_state:
-    st.session_state["retriever_syllabus"] = make_retreiver(syllabus_path)
-if "retriever_tutorial" not in st.session_state:
-    st.session_state["retriever_tutorial"] = make_retreiver(tutorial_path)
-if "retriever_pyq" not in st.session_state:
-    st.session_state["retriever_pyq"] = make_retreiver(pyq_path)
-if "file" not in st.session_state:
-    st.session_state["file"] = []
+@st.cache_data(ttl=60*60*24*7)
+def load_data():
+    if "retriever_syllabus" not in st.session_state:
+        st.session_state["retriever_syllabus"] = make_retreiver(syllabus_path)
+    if "retriever_tutorial" not in st.session_state:
+        st.session_state["retriever_tutorial"] = make_retreiver(tutorial_path)
+    if "retriever_pyq" not in st.session_state:
+        st.session_state["retriever_pyq"] = make_retreiver(pyq_path)
+    if "file" not in st.session_state:
+        st.session_state["file"] = []
+data = load_data()
 # ----------------------------
 # Utilities
 # ----------------------------
