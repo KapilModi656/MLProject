@@ -10,18 +10,30 @@ graph = create_workflow()
 syllabus_path=os.getcwd() + "/LLM_MNIT_PROJECT/1stSem/syllabus"
 tutorial_path= os.getcwd() + "/LLM_MNIT_PROJECT/1stSem/tutorials"
 pyq_path= os.getcwd() + "/LLM_MNIT_PROJECT/1stSem/pyq"
+
 @st.cache_data(ttl=60*60*24*7)
-def load_data():
-    if "retriever_syllabus" not in st.session_state:
-        st.session_state["retriever_syllabus"] = make_retreiver(syllabus_path)
-    if "retriever_tutorial" not in st.session_state:
-        st.session_state["retriever_tutorial"] = make_retreiver(tutorial_path)
-    if "retriever_pyq" not in st.session_state:
-        st.session_state["retriever_pyq"] = make_retreiver(pyq_path)
-    if "file" not in st.session_state:
-        st.session_state["file"] = []
-data = load_data()
-# ----------------------------
+def get_retrievers():
+    return {
+        "syllabus": make_retreiver(syllabus_path),
+        "tutorial": make_retreiver(tutorial_path),
+        "pyq": make_retreiver(pyq_path)
+    }
+
+# Load from cache
+retrievers = get_retrievers()
+
+# Now set in session state (this is allowed)
+if "retriever_syllabus" not in st.session_state:
+    st.session_state["retriever_syllabus"] = retrievers["syllabus"]
+
+if "retriever_tutorial" not in st.session_state:
+    st.session_state["retriever_tutorial"] = retrievers["tutorial"]
+
+if "retriever_pyq" not in st.session_state:
+    st.session_state["retriever_pyq"] = retrievers["pyq"]
+
+if "file" not in st.session_state:
+    st.session_state["file"] = []
 # Utilities
 # ----------------------------
 def clean_custom_tags(text: str) -> str:
