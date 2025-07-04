@@ -198,7 +198,7 @@ def wikipedia_tool(prompt):
     return response
 def text_retreiver(directory_path):
     docs= TextLoader(directory_path).load()
-    print("Files in directory:", os.listdir(directory_path))
+  
     docs= CharacterTextSplitter('\n').split_documents(docs)
     if not docs:
         raise ValueError(f"No documents found in {directory_path}")
