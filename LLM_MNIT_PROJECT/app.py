@@ -87,8 +87,6 @@ def fix_latex_format(text: str) -> str:
     return text.strip()
 
 st.set_page_config(page_title="MNITGPT", layout="centered")
-st.title("🧠 MNITGPT")
-st.markdown("This app helps MNIT students and researchers with tutorial solutions and research paper explanations.")
 
 # Replace the image-based logo with a styled text-based logo
 st.markdown(
