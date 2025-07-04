@@ -11,7 +11,7 @@ syllabus_path=os.getcwd() + "/LLM_MNIT_PROJECT/1stSem/syllabus"
 tutorial_path= os.getcwd() + "/LLM_MNIT_PROJECT/1stSem/tutorials"
 pyq_path= os.getcwd() + "/LLM_MNIT_PROJECT/1stSem/pyq"
 docs_path= os.getcwd() + "/LLM_MNIT_PROJECT/1stSem/docs/docs.txt"
-@st.cache_resource(ttl=60*60*24*7)
+
 def get_retrievers():
     return {
         "syllabus": make_retreiver(syllabus_path),
