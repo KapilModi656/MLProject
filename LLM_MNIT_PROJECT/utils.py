@@ -262,7 +262,7 @@ def tut_retriever(directory_path):
     from langchain.retrievers import EnsembleRetriever
     embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
     vectordb = FAISS.from_documents(documents=docs, embedding=embeddings)
-    dense_retriever = vectordb.as_retriever(search_type="similarity", search_kwargs={"k": 2})
+    dense_retriever = vectordb.as_retriever(search_type="mmr", search_kwargs={"k": 2})
 
     
 
