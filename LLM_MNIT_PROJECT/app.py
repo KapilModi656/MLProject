@@ -168,15 +168,10 @@ st.markdown('''
 ''', unsafe_allow_html=True)
 
 
-if not st.session_state["processing"]:
-    prompt = st.chat_input(
+prompt = st.chat_input(
         placeholder="Ask about tutorials, research, or upload files...",
-        accept_file="multiple"
-    )
-else:
-    st.chat_input(
-        placeholder="⏳ Processing your query... please wait...",
-        disabled=True
+        accept_file="multiple",
+        disabled=st.session_state["processing"]
     )
 
 if prompt:
