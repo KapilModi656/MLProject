@@ -86,13 +86,21 @@ def fix_latex_format(text: str) -> str:
 
     return text.strip()
 
-logo_path = os.getcwd() + "/LLM_MNIT_PROJECT/img/mnitgpt.jpg"
-st.image(logo_path, width=120)
-
 st.set_page_config(page_title="MNITGPT", layout="centered")
 st.title("🧠 MNITGPT")
 st.markdown("This app helps MNIT students and researchers with tutorial solutions and research paper explanations.")
 
+# Replace the image-based logo with a styled text-based logo
+st.markdown(
+    """
+    <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 20px;">
+        <div style="font-size: 2.5rem; font-weight: bold; color: #388e3c;">
+            🧠 MNITGPT
+        </div>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
 
 if "groq_api_key" not in st.session_state:
     st.session_state["groq_api_key"] = ""
