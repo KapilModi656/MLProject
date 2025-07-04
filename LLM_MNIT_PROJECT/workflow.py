@@ -128,10 +128,9 @@ def docs_node(state: State):
     """
     # Example: Just echo the docs back
     retriever = state.get("text_retriever")
-    if retriever:
-        state["docs2"] = retriever.invoke(state.get("user_input", {}).get("text", ""))
-    else:
-        state["docs2"] = state.get("docs", [])
+    
+    state["docs2"] = retriever.invoke(state.get("user_input", {}).get("text", ""))
+    
     print("docs_node:working fine")
     return state
 def final_prompt_node(state: State):

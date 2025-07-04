@@ -35,6 +35,8 @@ if "retriever_pyq" not in st.session_state:
 
 if "file" not in st.session_state:
     st.session_state["file"] = []
+if "text_retriever" not in st.session_state:
+    st.session_state["text_retriever"] = retrievers["docs"]
 # Utilities
 # ----------------------------
 def clean_custom_tags(text: str) -> str:
