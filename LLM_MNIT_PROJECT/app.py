@@ -86,7 +86,12 @@ def fix_latex_format(text: str) -> str:
 
     return text.strip()
 
-st.set_page_config(page_title="MNITGPT", layout="centered")
+# Update the page configuration to include a favicon
+st.set_page_config(
+    page_title="MNITGPT",
+    layout="centered",
+    page_icon=os.getcwd() + "/img/mnitgpt.jpg"  # Path to the favicon image
+)
 
 # Replace the image-based logo with a styled text-based logo
 st.markdown(
