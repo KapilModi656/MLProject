@@ -227,7 +227,7 @@ def make_retriever(directory_path):
     """
     docs = PyPDFDirectoryLoader(directory_path).load()
     print("Files in directory:", os.listdir(directory_path))
-    docs= RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200).split_documents(docs)
+    docs= RecursiveCharacterTextSplitter(chunk_size=2000, chunk_overlap=200).split_documents(docs)
     if not docs:
         raise ValueError(f"No documents found in {directory_path}")
 
@@ -238,7 +238,7 @@ def make_retriever(directory_path):
     from langchain.retrievers import EnsembleRetriever
     embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
     vectordb = FAISS.from_documents(documents=docs, embedding=embeddings)
-    dense_retriever = vectordb.as_retriever(search_type="similarity", search_kwargs={"k": 3})
+    dense_retriever = vectordb.as_retriever(search_type="similarity", search_kwargs={"k": 4})
 
     # Sparse retriever (BM25)
     bm25_retriever = BM25Retriever.from_documents(docs)
@@ -250,7 +250,8 @@ def make_retriever(directory_path):
         weights=[0.5, 0.5]
     )
 
-    return hybrid_retriever
+    #
+    return dense_retriever
       # Return as retriever
 def arxiv_tool(prompt):
     if not prompt:
