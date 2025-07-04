@@ -86,6 +86,9 @@ def fix_latex_format(text: str) -> str:
 
     return text.strip()
 
+logo_path = os.getcwd() + "/LLM_MNIT_PROJECT/img/mnitgpt.jpg"
+st.image(logo_path, width=120)
+
 st.set_page_config(page_title="MNITGPT", layout="centered")
 st.title("🧠 MNITGPT")
 st.markdown("This app helps MNIT students and researchers with tutorial solutions and research paper explanations.")
