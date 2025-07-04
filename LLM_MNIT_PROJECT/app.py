@@ -24,10 +24,10 @@ def get_retrievers():
         print("Error loading docs retriever:", e)
     return retrievers
 
-# Load from cache
+
 retrievers = get_retrievers()
 
-# Now set in session state (this is allowed)
+
 if "retriever_syllabus" not in st.session_state:
     st.session_state["retriever_syllabus"] = retrievers["syllabus"]
 
@@ -41,27 +41,27 @@ if "file" not in st.session_state:
     st.session_state["file"] = []
 if "text_retriever" not in st.session_state:
     st.session_state["text_retriever"] = retrievers["docs"]
-# Utilities
-# ----------------------------
+if "processing" not in st.session_state:
+    st.session_state["processing"] = False
+
 def clean_custom_tags(text: str) -> str:
-    # Remove <think>...</think> and similar tags
+  
     return re.sub(r"</?think>", "", text)
 
 def fix_latex_format(text: str) -> str:
     if not isinstance(text, str):
         text = str(text)
 
-    # Clean <think> tags if present
+    
     text = re.sub(r"</?think>", "", text)
 
-    # Avoid re-wrapping if already inside LaTeX $$...$$
     def wrap_in_dollars(match):
         content = match.group(1)
         return f"$$\n{content.strip()}\n$$"
 
-    # Detect inline LaTeX blocks already formatted correctly and skip them
+ 
     if not re.search(r"\$\$.*?\$\$", text, flags=re.DOTALL):
-        # Wrap multiline \begin{}...\end{} in $$ if not already
+  
         text = re.sub(
             r'(?<!\$)\s*(\\begin\{bmatrix\}.*?\\end\{bmatrix\})\s*(?!\$)',
             wrap_in_dollars,
@@ -69,7 +69,6 @@ def fix_latex_format(text: str) -> str:
             flags=re.DOTALL
         )
 
-    # Match matrix-like number rows and convert only if not already in $$...$$
     def detect_matrix_block(match):
         nums = match.group(0).strip().split()
         if len(nums) % 3 == 0 and all(n.replace('-', '').replace('.', '').isdigit() for n in nums):
@@ -78,23 +77,19 @@ def fix_latex_format(text: str) -> str:
             return f"\n$$\n{latex_matrix}\n$$\n"
         return match.group(0)
 
-    # Detect digit-only rows resembling matrix if not part of LaTeX already
+   
     text = re.sub(r'(?<!\$)(?:\d+[\s\-]+)+\d+(?!\$)', detect_matrix_block, text)
 
-    # Normalize multiple newlines between steps
+
     text = re.sub(r"\n{2,}", "\n\n", text.strip())
 
     return text.strip()
-# ----------------------------
-# App Config
-# ----------------------------
+
 st.set_page_config(page_title="MNITGPT", layout="centered")
 st.title("🧠 MNITGPT")
 st.markdown("This app helps MNIT students and researchers with tutorial solutions and research paper explanations.")
 
-# ----------------------------
-# API Key (Optional)
-# ----------------------------
+
 if "groq_api_key" not in st.session_state:
     st.session_state["groq_api_key"] = ""
 
@@ -109,15 +104,11 @@ with st.sidebar:
         st.session_state["groq_api_key"] = groq_key
         st.success("Updated!")
 
-# ----------------------------
-# Session State
-# ----------------------------
+
 if "messages" not in st.session_state:
     st.session_state["messages"] = []
 
-# ----------------------------
-# Show Chat History
-# ----------------------------
+
 for msg in st.session_state["messages"]:
     with st.chat_message(msg["role"]):
         content = msg["content"]
@@ -145,7 +136,7 @@ for msg in st.session_state["messages"]:
                     """,
                     unsafe_allow_html=True
                 )
-# Improved CSS for dark/light mode compatibility and bubble style
+
 st.markdown('''
     <style>
     html[data-theme="dark"] {
@@ -175,12 +166,11 @@ st.markdown('''
     </style>
 ''', unsafe_allow_html=True)
 
-# ----------------------------
-# Chat Input
-# ----------------------------
-prompt = st.chat_input(placeholder="Ask about tutorials, research, or upload files...", accept_file="multiple")
+
+prompt = st.chat_input(placeholder="Ask about tutorials, research, or upload files...", accept_file="multiple",disabled=st.session_state["processing"])
 
 if prompt:
+    st.session_state["processing"] = True
     user_text = prompt.text if hasattr(prompt, 'text') else str(prompt)
     user_files = prompt.files if hasattr(prompt, 'files') else []
     if user_files:
@@ -188,7 +178,7 @@ if prompt:
 
     user_input = {"text": user_text, "files": st.session_state.get("file", [])}
 
-    # Show User Message
+    
     st.session_state["messages"].append({"role": "user", "content": user_text})
     with st.chat_message("user"):
         st.write('', unsafe_allow_html=False)
@@ -203,7 +193,7 @@ if prompt:
                 unsafe_allow_html=True
             )
 
-    # Call LangGraph
+    
     with st.spinner("🧠 Thinking..."):
         result = graph.invoke({
             "user_input": user_input,
@@ -214,7 +204,7 @@ if prompt:
             "text_retriever": st.session_state["text_retriever"]
         })
         response_text = result.get("final_response") if isinstance(result, dict) else None
-
+    st.session_state["processing"] = False
     if response_text:
         assistant_msg = fix_latex_format(response_text.content if hasattr(response_text, "content") else str(response_text))
         st.session_state["messages"].append({"role": "assistant", "content": assistant_msg})
