@@ -144,8 +144,9 @@ def final_prompt_node(state: State):
         state.get("syllabus") or [],
         state.get("tutorial") or [],
         state.get("pyqs") or [],
-        state.get("docs2") or []
+        
     ]
+    docs2= state.get("docs2") or []
     combined_docs = []
     for doc_list in docs_lists:
         combined_docs.extend(doc_list)
@@ -156,6 +157,13 @@ def final_prompt_node(state: State):
             doc.page_content if hasattr(doc, "page_content") else str(doc)
             for doc in combined_docs
         ))
+    context2=[]
+    if docs2:
+        context2.append("\n".join(
+            doc.page_content if hasattr(doc, "page_content") else str(doc)
+            for doc in docs2
+        ))
+        
     for key in ["wiki_response", "web_response", "context"]:
         val = state.get(key)
         if val:
@@ -163,6 +171,8 @@ def final_prompt_node(state: State):
 
     context = "\n\n".join(context_parts).strip()
     context=theory_summarizer(context=context)
+    context1="\n\n".join(context2).strip()
+    context += context1 if context2 else context
     text = state["user_input"].get("text", "") if isinstance(state["user_input"], dict) else state["user_input"]
     final_prompt = r"""
     System: You are MNITGPT, an intelligent academic assistant developed by Kapil Modi for students, researchers, and professors at MNIT. Your primary role is to:
@@ -184,7 +194,7 @@ def final_prompt_node(state: State):
 7. You would get summarized context from the theory_summarizer function and use it in your response.
 8. dont give your intrusive thought in output only give direct answer to the user whether maths tutorial or pyq
 Always maintain this identity and formatting standard.
-
+9. If you have been provided with some link in context then you have to pass it to the end user
 ---
 
 Respond accordingly:
@@ -270,7 +280,7 @@ System: You are MNITGPT, an intelligent academic assistant developed by Kapil Mo
 3.Wrap all math in LaTeX blocks ($$...$$) and force line breaks/spacing using \n\n between steps.
 4. strictly use latex format so that markdown can easily render it
 5. Keep the response helpful, humble, and clearly structured — ranging from 2 to 400 words, depending on complexity.
-
+6. if you have been provided with some google drive link then you have to provide it to end user
 last response: {prompt}
 user input: {text}
 """
