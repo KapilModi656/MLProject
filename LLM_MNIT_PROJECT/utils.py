@@ -197,6 +197,10 @@ def wikipedia_tool(prompt):
     response= wiki_wrapper.run(prompt)
     return response
 def text_retriever(file_path):  # it's a file, not directory
+    # Import required modules
+    from langchain_huggingface import HuggingFaceEmbeddings
+    from langchain_community.vectorstores import FAISS
+
     # Load the document
     docs = TextLoader(file_path).load()  # ✅ Returns a list of Document
 
