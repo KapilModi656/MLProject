@@ -50,28 +50,41 @@ def clean_custom_tags(text: str) -> str:
 def fix_latex_format(text: str) -> str:
     if not isinstance(text, str):
         text = str(text)
-    text = clean_custom_tags(text)
 
-    # Convert flat 3x3 matrix rows into LaTeX matrix block
+    # Clean <think> tags if present
+    text = re.sub(r"</?think>", "", text)
+
+    # Avoid re-wrapping if already inside LaTeX $$...$$
+    def wrap_in_dollars(match):
+        content = match.group(1)
+        return f"$$\n{content.strip()}\n$$"
+
+    # Detect inline LaTeX blocks already formatted correctly and skip them
+    if not re.search(r"\$\$.*?\$\$", text, flags=re.DOTALL):
+        # Wrap multiline \begin{}...\end{} in $$ if not already
+        text = re.sub(
+            r'(?<!\$)\s*(\\begin\{bmatrix\}.*?\\end\{bmatrix\})\s*(?!\$)',
+            wrap_in_dollars,
+            text,
+            flags=re.DOTALL
+        )
+
+    # Match matrix-like number rows and convert only if not already in $$...$$
     def detect_matrix_block(match):
         nums = match.group(0).strip().split()
-        if len(nums) % 3 == 0:
+        if len(nums) % 3 == 0 and all(n.replace('-', '').replace('.', '').isdigit() for n in nums):
             rows = [' & '.join(nums[i:i+3]) for i in range(0, len(nums), 3)]
             latex_matrix = "\\begin{bmatrix}\n" + ' \\\\\n'.join(rows) + "\n\\end{bmatrix}"
             return f"\n$$\n{latex_matrix}\n$$\n"
         return match.group(0)
 
-    # Match lines of digits that look like matrix rows
-    text = re.sub(r'(?:\d+[\s-]+)+\d+', detect_matrix_block, text)
+    # Detect digit-only rows resembling matrix if not part of LaTeX already
+    text = re.sub(r'(?<!\$)(?:\d+[\s\-]+)+\d+(?!\$)', detect_matrix_block, text)
 
-    # Make sure any \begin{bmatrix} blocks are wrapped in $$ if not already
-    text = re.sub(r'(?<!\$)\s*(\\begin\{bmatrix\}.*?\\end\{bmatrix\})\s*(?!\$)', r'$$\1$$', text, flags=re.DOTALL)
+    # Normalize multiple newlines between steps
+    text = re.sub(r"\n{2,}", "\n\n", text.strip())
 
-    # Escape stray square brackets
-    text = text.replace('[', '\\[').replace(']', '\\]')
-
-    return text
-
+    return text.strip()
 # ----------------------------
 # App Config
 # ----------------------------
@@ -203,7 +216,7 @@ if prompt:
         response_text = result.get("final_response") if isinstance(result, dict) else None
 
     if response_text:
-        assistant_msg = response_text.content if hasattr(response_text, "content") else str(response_text)
+        assistant_msg = fix_latex_format(response_text.content if hasattr(response_text, "content") else str(response_text))
         st.session_state["messages"].append({"role": "assistant", "content": assistant_msg})
         with st.chat_message("assistant"):
             cols = st.columns([0.85, 0.15])
