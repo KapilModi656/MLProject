@@ -171,11 +171,11 @@ st.markdown('''
 prompt = st.chat_input(
         placeholder="Ask about tutorials, research, or upload files...",
         accept_file="multiple",
-        disabled=st.session_state["processing"]
+        disabled=st.session_state.get("processing", False)
     )
 
 if prompt:
-    st.session_state["processing"] = False
+    
     time.sleep(0.1)
     user_text = prompt.text if hasattr(prompt, 'text') else str(prompt)
     user_files = prompt.files if hasattr(prompt, 'files') else []
@@ -201,6 +201,7 @@ if prompt:
 
     
     with st.spinner("🧠 Thinking..."):
+        st.session_state["processing"] = True
         result = graph.invoke({
             "user_input": user_input,
             "groq_api_key": st.session_state["groq_api_key"],
@@ -210,9 +211,10 @@ if prompt:
             "text_retriever": st.session_state["text_retriever"]
         })
         response_text = result.get("final_response") if isinstance(result, dict) else None
-    st.session_state["processing"] = True
-    time.sleep(0.1) 
+    
     if response_text:
+        st.session_state["processing"] = False
+        time.sleep(0.2) 
         assistant_msg = fix_latex_format(response_text.content if hasattr(response_text, "content") else str(response_text))
         st.session_state["messages"].append({"role": "assistant", "content": assistant_msg})
         with st.chat_message("assistant"):
@@ -227,3 +229,4 @@ if prompt:
                     unsafe_allow_html=True
                 )
 
+st.session_state["processing"] = False
