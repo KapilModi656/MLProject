@@ -196,10 +196,14 @@ def wikipedia_tool(prompt):
     
     response= wiki_wrapper.run(prompt)
     return response
-def text_retreiver(directory_path):
+def text_retriever(directory_path):
     docs= TextLoader(directory_path).load()
   
-    docs= CharacterTextSplitter('\n').split_documents(docs)
+    docs = CharacterTextSplitter(
+        separator="\n",
+        chunk_size=1000,
+        chunk_overlap=200
+    )
     if not docs:
         raise ValueError(f"No documents found in {directory_path}")
     # Create embeddings and vector store
@@ -209,7 +213,7 @@ def text_retreiver(directory_path):
     vectordb = FAISS.from_documents(documents=docs, embedding=embeddings)
     retriever = vectordb.as_retriever(search_type="similarity", search_kwargs={"k": 7})
     return retriever
-def make_retreiver(directory_path):
+def make_retriever(directory_path):
     """
     Create a retriever from a document path.
     Supports PDF, PPTX, DOCX, TXT, and MD files.

@@ -2,7 +2,7 @@ import streamlit as st
 from workflow import create_workflow
 import re
 import uuid
-from utils import make_retreiver,text_retreiver
+from utils import make_retriever,text_retriever
 import os
 from datetime import timedelta
 graph = create_workflow()
@@ -13,12 +13,16 @@ pyq_path= os.getcwd() + "/LLM_MNIT_PROJECT/1stSem/pyq"
 docs_path= os.getcwd() + "/LLM_MNIT_PROJECT/1stSem/docs/docs.txt"
 @st.cache_resource(ttl=60*60*24*7)
 def get_retrievers():
-    return {
-        "syllabus": make_retreiver(syllabus_path),
-        "tutorial": make_retreiver(tutorial_path),
-        "pyq": make_retreiver(pyq_path),
-        "docs": text_retreiver(docs_path)
+    retrievers = {
+        "syllabus": make_retriever(syllabus_path),
+        "tutorial": make_retriever(tutorial_path),
+        "pyq": make_retriever(pyq_path),
     }
+    try:
+        retrievers["docs"] = text_retriever(docs_path)
+    except Exception as e:
+        print("Error loading docs retriever:", e)
+    return retrievers
 
 # Load from cache
 retrievers = get_retrievers()
