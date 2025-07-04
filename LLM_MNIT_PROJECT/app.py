@@ -181,6 +181,7 @@ else:
 
 if prompt:
     st.session_state["processing"] = True
+    time.sleep(0.1)
     user_text = prompt.text if hasattr(prompt, 'text') else str(prompt)
     user_files = prompt.files if hasattr(prompt, 'files') else []
     if user_files:
