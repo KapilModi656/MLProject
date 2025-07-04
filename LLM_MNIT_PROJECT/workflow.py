@@ -383,6 +383,8 @@ def tutorials_pyq_node(state: State):
         state["tut_pyq"] = "tutorial"
     elif tut_pyq_choice == "pyq":
         state["tut_pyq"] = "pyq"
+    elif tut_pyq_choice == "notes":
+        state["tut_pyq"] = "notes"
     else:
         state["tut_pyq"] = "none"
     
