@@ -2,7 +2,7 @@ import streamlit as st
 from workflow import create_workflow
 import re
 import uuid
-from utils import make_retreiver
+from utils import make_retreiver,text_retreiver
 import os
 from datetime import timedelta
 graph = create_workflow()
@@ -10,13 +10,14 @@ graph = create_workflow()
 syllabus_path=os.getcwd() + "/LLM_MNIT_PROJECT/1stSem/syllabus"
 tutorial_path= os.getcwd() + "/LLM_MNIT_PROJECT/1stSem/tutorials"
 pyq_path= os.getcwd() + "/LLM_MNIT_PROJECT/1stSem/pyq"
-
+docs_path= os.getcwd() + "/LLM_MNIT_PROJECT/1stSem/docs/docs.txt"
 @st.cache_resource(ttl=60*60*24*7)
 def get_retrievers():
     return {
         "syllabus": make_retreiver(syllabus_path),
         "tutorial": make_retreiver(tutorial_path),
-        "pyq": make_retreiver(pyq_path)
+        "pyq": make_retreiver(pyq_path),
+        "docs": text_retreiver(docs_path)
     }
 
 # Load from cache
@@ -190,7 +191,8 @@ if prompt:
             "groq_api_key": st.session_state["groq_api_key"],
             "retriever_syllabus": st.session_state["retriever_syllabus"],
             "retriever_tutorial": st.session_state["retriever_tutorial"],
-            "retriever_pyq": st.session_state["retriever_pyq"]
+            "retriever_pyq": st.session_state["retriever_pyq"],
+            "text_retriever": st.session_state["text_retriever"]
         })
         response_text = result.get("final_response") if isinstance(result, dict) else None
 

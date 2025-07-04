@@ -7,7 +7,7 @@ from langchain_community.document_loaders import (
     TextLoader,
     PyPDFDirectoryLoader
 )
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain.text_splitter import RecursiveCharacterTextSplitter, CharacterTextSplitter
 from langchain_community.document_loaders.youtube import YoutubeLoader
 import re
 from validators import url as is_valid_url
@@ -125,7 +125,7 @@ def theory_summarizer(context: str):
     texts = text_splitter.split_text(context)
     
     docs = [Document(page_content=t) for t in texts]
-    sleep_seconds=5
+    sleep_seconds=3
     # Map step: summarize each chunk separately, with sleep in between
     chunk_summaries = []
     for i, doc in enumerate(docs):
@@ -196,6 +196,19 @@ def wikipedia_tool(prompt):
     
     response= wiki_wrapper.run(prompt)
     return response
+def text_retreiver(directory_path):
+    docs= TextLoader(directory_path).load()
+    print("Files in directory:", os.listdir(directory_path))
+    docs= CharacterTextSplitter('\n').split_documents(docs)
+    if not docs:
+        raise ValueError(f"No documents found in {directory_path}")
+    # Create embeddings and vector store
+    from langchain_huggingface import HuggingFaceEmbeddings
+    from langchain_community.vectorstores import FAISS
+    embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
+    vectordb = FAISS.from_documents(documents=docs, embedding=embeddings)
+    retriever = vectordb.as_retriever(search_type="similarity", search_kwargs={"k": 7})
+    return retriever
 def make_retreiver(directory_path):
     """
     Create a retriever from a document path.

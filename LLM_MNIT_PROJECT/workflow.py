@@ -52,6 +52,8 @@ class State(TypedDict):
     retriever_pyq:RunnableLambda
     use_docs: bool
     final_response: str
+    text_retriever:RunnableLambda
+    docs2: list[str]  # Assuming docs2 is a list of strings
 
 
 syllabus_path=os.getcwd() + "/LLM_MNIT_PROJECT/1stSem/syllabus"
@@ -119,7 +121,19 @@ def web_reader_tool_node(state: State):
     text = state["user_input"].get("text", "") if isinstance(state["user_input"], dict) else state["user_input"]
     state["web_response"] = web_tool(text)
     return state
-
+def docs_node(state: State):
+    """
+    This node processes the 'docs' field in the state, which is expected to be a list of documents.
+    It can be extended to handle more complex logic if needed.
+    """
+    # Example: Just echo the docs back
+    retriever = state.get("text_retriever")
+    if retriever:
+        state["docs2"] = retriever.invoke(state.get("user_input", {}).get("text", ""))
+    else:
+        state["docs2"] = state.get("docs", [])
+    print("docs_node:working fine")
+    return state
 def final_prompt_node(state: State):
     print("final_prompt_node:working fine")
     docs_lists = [
@@ -131,6 +145,7 @@ def final_prompt_node(state: State):
         state.get("syllabus") or [],
         state.get("tutorial") or [],
         state.get("pyqs") or [],
+        state.get("docs2") or []
     ]
     combined_docs = []
     for doc_list in docs_lists:
@@ -215,6 +230,7 @@ def tutorials(state: State):
     retriever = state.get("retriever_tutorial")
     state["tutorial"] = retriever.invoke(state.get("user_input", {}).get("text", ""))
     return state
+
 def pyq(state: State):
     """
     This node is a placeholder for previous year questions (PYQ) related processing.
@@ -290,7 +306,8 @@ You are an intelligent router. Based on the user prompt, choose the most appropr
 - "tutorial" for tutorials-related queries
 - "pyq" for previous year questions related queries
 - "none" for other queries
-Just reply with one word.[tutorial, pyq, none].
+- "notes" for notes related queries
+Just reply with one word.[tutorial, pyq, none,notes].
 Prompt: {input}
 """)
 routing_prompt = PromptTemplate.from_template("""
@@ -418,7 +435,7 @@ def create_workflow():
     graph.add_node("llm2_node", llm2_node)
     graph.add_node("use_docs_node", use_docs_node)
     graph.add_node("llm3_node", llm3_node)
-    
+    graph.add_node("docs_node", docs_node)
 
     graph.add_edge(START, "check_for_file_node")
   
@@ -487,12 +504,13 @@ def create_workflow():
         path_map={
             "tutorial": "tutorials",
             "pyq": "pyq",
-            "none": "data_routing_node"
+            "none": "data_routing_node",
+            "notes": "docs_node"
         }
     )
-    graph.add_edge("tutorials", "data_routing_node")
-    graph.add_edge("pyq", "data_routing_node")
-    
+    graph.add_edge("tutorials", "docs_node")
+    graph.add_edge("pyq", "docs_node")
+    graph.add_edge("docs_node", "data_routing_node")
 
     # URL types
     graph.add_conditional_edges(
