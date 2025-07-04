@@ -5,6 +5,7 @@ import uuid
 from utils import make_retriever,text_retriever
 import os
 from datetime import timedelta
+import time
 graph = create_workflow()
 
 syllabus_path=os.getcwd() + "/LLM_MNIT_PROJECT/1stSem/syllabus"
@@ -167,7 +168,16 @@ st.markdown('''
 ''', unsafe_allow_html=True)
 
 
-prompt = st.chat_input(placeholder="Ask about tutorials, research, or upload files...", accept_file="multiple",disabled=st.session_state["processing"])
+if not st.session_state["processing"]:
+    prompt = st.chat_input(
+        placeholder="Ask about tutorials, research, or upload files...",
+        accept_file="multiple"
+    )
+else:
+    st.chat_input(
+        placeholder="⏳ Processing your query... please wait...",
+        disabled=True
+    )
 
 if prompt:
     st.session_state["processing"] = True
@@ -205,6 +215,7 @@ if prompt:
         })
         response_text = result.get("final_response") if isinstance(result, dict) else None
     st.session_state["processing"] = False
+    time.sleep(0.1) 
     if response_text:
         assistant_msg = fix_latex_format(response_text.content if hasattr(response_text, "content") else str(response_text))
         st.session_state["messages"].append({"role": "assistant", "content": assistant_msg})
