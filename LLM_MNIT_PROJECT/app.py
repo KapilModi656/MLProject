@@ -175,7 +175,7 @@ prompt = st.chat_input(
     )
 
 if prompt:
-    st.session_state["processing"] = True
+    st.session_state["processing"] = False
     time.sleep(0.1)
     user_text = prompt.text if hasattr(prompt, 'text') else str(prompt)
     user_files = prompt.files if hasattr(prompt, 'files') else []
@@ -210,7 +210,7 @@ if prompt:
             "text_retriever": st.session_state["text_retriever"]
         })
         response_text = result.get("final_response") if isinstance(result, dict) else None
-    st.session_state["processing"] = False
+    st.session_state["processing"] = True
     time.sleep(0.1) 
     if response_text:
         assistant_msg = fix_latex_format(response_text.content if hasattr(response_text, "content") else str(response_text))
