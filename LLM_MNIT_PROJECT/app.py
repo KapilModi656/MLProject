@@ -2,7 +2,7 @@ import streamlit as st
 from workflow import create_workflow
 import re
 import uuid
-from utils import make_retriever,text_retriever
+from utils import make_retriever,text_retriever,tut_retriever
 import os
 from datetime import timedelta
 import time
@@ -16,7 +16,7 @@ docs_path= os.getcwd() + "/LLM_MNIT_PROJECT/1stSem/docs/docs.txt"
 def get_retrievers():
     retrievers = {
         "syllabus": make_retriever(syllabus_path),
-        "tutorial": make_retriever(tutorial_path),
+        "tutorial": tut_retriever(tutorial_path),
         "pyq": make_retriever(pyq_path),
     }
     try:

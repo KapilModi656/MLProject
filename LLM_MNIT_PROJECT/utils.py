@@ -240,17 +240,33 @@ def make_retriever(directory_path):
     vectordb = FAISS.from_documents(documents=docs, embedding=embeddings)
     dense_retriever = vectordb.as_retriever(search_type="similarity", search_kwargs={"k": 4})
 
-    # Sparse retriever (BM25)
-    bm25_retriever = BM25Retriever.from_documents(docs)
-    bm25_retriever.k = 3
-
-    # Hybrid retriever (Ensemble)
-    hybrid_retriever = EnsembleRetriever(
-        retrievers=[dense_retriever, bm25_retriever],
-        weights=[0.5, 0.5]
-    )
+    
 
     #
+    return dense_retriever
+def tut_retriever(directory_path):
+    """
+    Create a retriever from a document path.
+    Supports PDF, PPTX, DOCX, TXT, and MD files.
+    """
+    docs = PyPDFDirectoryLoader(directory_path).load()
+    print("Files in directory:", os.listdir(directory_path))
+    
+    if not docs:
+        raise ValueError(f"No documents found in {directory_path}")
+
+    # Create embeddings and vector store
+    from langchain_huggingface import HuggingFaceEmbeddings
+    from langchain_community.vectorstores import FAISS
+    from langchain_community.retrievers import BM25Retriever
+    from langchain.retrievers import EnsembleRetriever
+    embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
+    vectordb = FAISS.from_documents(documents=docs, embedding=embeddings)
+    dense_retriever = vectordb.as_retriever(search_type="similarity", search_kwargs={"k": 4})
+
+    
+
+    
     return dense_retriever
       # Return as retriever
 def arxiv_tool(prompt):
