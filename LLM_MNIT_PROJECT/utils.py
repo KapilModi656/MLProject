@@ -196,23 +196,26 @@ def wikipedia_tool(prompt):
     
     response= wiki_wrapper.run(prompt)
     return response
-def text_retriever(directory_path):
-    docs= TextLoader(directory_path).load()
-  
-    docs = CharacterTextSplitter(
+def text_retriever(file_path):  # it's a file, not directory
+    # Load the document
+    docs = TextLoader(file_path).load()  # ✅ Returns a list of Document
+
+    if not docs:
+        raise ValueError(f"No documents found in {file_path}")
+
+    # Split the document
+    splitter = CharacterTextSplitter(
         separator="\n",
         chunk_size=1000,
         chunk_overlap=200
     )
-    if not docs:
-        raise ValueError(f"No documents found in {directory_path}")
+    split_docs = splitter.split_documents(docs)
+
     # Create embeddings and vector store
-    from langchain_huggingface import HuggingFaceEmbeddings
-    from langchain_community.vectorstores import FAISS
     embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
-    vectordb = FAISS.from_documents(documents=docs, embedding=embeddings)
-    retriever = vectordb.as_retriever(search_type="similarity", search_kwargs={"k": 7})
-    return retriever
+    vectordb = FAISS.from_documents(documents=split_docs, embedding=embeddings)
+
+    return vectordb.as_retriever(search_type="similarity", search_kwargs={"k": 7})
 def make_retriever(directory_path):
     """
     Create a retriever from a document path.
