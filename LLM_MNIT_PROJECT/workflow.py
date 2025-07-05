@@ -270,7 +270,7 @@ def llm1_node(state: State):
     state["response"] = llm1.invoke(prompt)
     return state
 def llm3_node(state: State):
-    llm3 = ChatCerebras(model="llama-4-scout-17b-16e-instruct", api_key=os.getenv("CEREBRAS_API_KEY"))
+    llm3 = ChatCerebras(model="llama-4-scout-17b-16e-instruct", api_key=os.getenv("CEREBRAS_API_KEY2"))
     prompt = state.get("response").content
     text= state["user_input"].get("text", "") 
     prompt1="""
