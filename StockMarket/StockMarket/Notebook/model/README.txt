@@ -1,0 +1,1 @@
+This folder contains all model and scaler files previously located under various 'models' and 'scalers' folders. All inheritance and usage should now reference this unified 'model' folder.
