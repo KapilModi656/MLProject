@@ -110,18 +110,15 @@ class StockTradingEnvironment:
         next_low = self.y4_scaler.inverse_transform(pred_low.reshape(1, -1))[0][0]
         next_volume = self.y5_scaler.inverse_transform(pred_volume.reshape(1, -1))[0][0]
         
-        # --- FIX 4: Correctly update the state for the next step ---
-        # Create a new row for the predicted day
-        last_timestamp = self.full_data.index[-1]
-        next_timestamp = last_timestamp + pd.Timedelta(days=1)
+       
         
         new_row = pd.DataFrame({
-            'Open': [next_open], 'High': [next_high], 'Low': [next_low], 
-            'Close': [next_close], 'Volume': [next_volume]
-        }, index=[next_timestamp])
+            'Close': [next_close], 'High': [next_high], 'Low': [next_low], 
+            'Open': [next_open], 'Volume': [next_volume]
+        })
         
     
-        raw_cols = ['Open', 'High', 'Low', 'Close', 'Volume']
+        raw_cols = ['Close', 'High', 'Low','Open', 'Volume']
         updated_data = pd.concat([self.full_data[raw_cols], new_row])
 
        
